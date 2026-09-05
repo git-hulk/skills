@@ -1,0 +1,3 @@
+interface:
+  display_name: "Kvrocks Release"
+  short_description: "Prepare and resume human-approved Kvrocks releases"
