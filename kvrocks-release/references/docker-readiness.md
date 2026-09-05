@@ -110,6 +110,8 @@ Set `docker_ready` only after the matching workflow and all required jobs have
 succeeded and the registry manifest is verified. Record the run/attempt/link,
 published reference, digest, platforms, verification time, and completion time.
 Report those results and stop for the next step's confirmation.
+The next checkpoint is [step 4a: verify the uploaded candidate](verify-candidate.md),
+before any vote-email drafting. A ready Docker image does not verify source uploads.
 
 In dry-run, a simulated tag push creates no real workflow. Use explicitly
 authorized local run/job/manifest fixtures to rehearse waiting, failure, and

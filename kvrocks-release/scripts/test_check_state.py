@@ -10,7 +10,12 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from check_state import email_payload_sha256, inspect_record
+from check_state import (
+    VERIFICATION_CHECKS,
+    email_payload_sha256,
+    inspect_record,
+    publication_plan_sha256,
+)
 
 
 class CheckStateTest(unittest.TestCase):
@@ -513,8 +518,94 @@ class CheckStateTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.check_at(11)
 
-    def email_state(self, mode="dry-run", method="manual", complete=False):
+    def verification_state(self, mode="dry-run", complete=True):
         state = self.docker_state(mode, ready=True)
+        archive = "apache-kvrocks-9.9.0-src.tar.gz"
+        state["source_release"].update(
+            signing_fingerprint="A" * 40,
+            artifacts=[
+                {
+                    "path": "/tmp/" + archive + suffix,
+                    "sha512": str(i) * 128,
+                    "size": i,
+                    "status": "simulated" if mode == "dry-run" else "actual",
+                }
+                for i, suffix in enumerate(("", ".asc", ".sha512"), 1)
+            ],
+        )
+        status = (
+            (
+                "dry_run_uploaded_candidate_verified"
+                if mode == "dry-run"
+                else "uploaded_candidate_verified"
+            )
+            if complete
+            else "verifying_uploaded_candidate"
+        )
+        verification = {
+            "status": status,
+            "mode": mode,
+            "simulated": mode == "dry-run",
+            "entry_confirmation": {
+                "by": "Test release manager",
+                "at": "2030-01-02T10:12:10Z",
+                "mode": mode,
+                "simulated": mode == "dry-run",
+                "target_step": 4,
+                "phase": "verify_uploaded_candidate",
+                "candidate_tag": "v9.9.0-rc1",
+                "prepared_commit": "b" * 40,
+            },
+            "source_url": "https://dist.apache.org/repos/dist/dev/kvrocks/9.9.0/",
+            "source_revision": 100,
+            "keys_url": "https://downloads.apache.org/kvrocks/KEYS",
+            "signing_fingerprint": "A" * 40,
+            "files": [
+                {"name": item["path"].rsplit("/", 1)[1], "sha512": item["sha512"]}
+                for item in state["source_release"]["artifacts"]
+            ],
+            "evidence_source": "manager-authorized local fixture"
+            if mode == "dry-run"
+            else None,
+            "checks": {
+                name: {
+                    "result": "simulated_pass" if mode == "dry-run" else "passed",
+                    "at": "2030-01-02T10:12:40Z",
+                    "command_or_review": "Test fixture for " + name,
+                    "evidence": "Isolated test log for " + name,
+                }
+                for name in VERIFICATION_CHECKS
+            }
+            if complete
+            else {},
+            "read_operation_ids": ["verification-reads"],
+            "blockers": [],
+            "completed_at": "2030-01-02T10:12:50Z" if complete else None,
+        }
+        state["candidate_verification"] = verification
+        state["external_operations"].append(
+            {
+                "id": "verification-reads",
+                "step": 4,
+                "mode": mode,
+                "kind": "read",
+                "inputs": {
+                    key: verification[key]
+                    for key in ("source_url", "source_revision", "keys_url")
+                },
+                "approval": {
+                    "by": "Test release manager",
+                    "at": "2030-01-02T10:12:20Z",
+                    "mode": mode,
+                },
+                "status": "simulated" if mode == "dry-run" else "succeeded",
+            }
+        )
+        state.update(step=4, status=status, email=None)
+        return state
+
+    def email_state(self, mode="dry-run", method="manual", complete=False):
+        state = self.verification_state(mode)
         state.update(step=4, status="awaiting_email_sender")
         email = {
             "entry_confirmation": {
@@ -525,6 +616,9 @@ class CheckStateTest(unittest.TestCase):
                 "target_step": 4,
                 "candidate_tag": "v9.9.0-rc1",
                 "prepared_commit": "b" * 40,
+                "verification_sha256": publication_plan_sha256(
+                    state["candidate_verification"]
+                ),
             },
             "sender": {"address": None, "confirmation": None},
             "to": ["dev@kvrocks.apache.org"],
@@ -564,6 +658,9 @@ class CheckStateTest(unittest.TestCase):
             body="Test-only candidate v9.9.0-rc1 vote fixture.",
             composed_at="2030-01-02T10:17:00Z",
             artifact_review={
+                "verification_sha256": publication_plan_sha256(
+                    state["candidate_verification"]
+                ),
                 "candidate_tag": "v9.9.0-rc1",
                 "prepared_commit": "b" * 40,
                 "source_url": "https://dist.apache.org/repos/dist/dev/kvrocks/9.9.0/",
@@ -606,7 +703,7 @@ class CheckStateTest(unittest.TestCase):
                     if mode == "dry-run"
                     else {"draft_id": "test-draft-id"},
                 }
-            ]
+            ] + state["external_operations"]
             if mode == "live":
                 state["status"] = "gmail_draft_created"
                 email["draft"] = {
@@ -625,6 +722,130 @@ class CheckStateTest(unittest.TestCase):
         self.assertIsNone(result["state"]["email"]["subject"])
         self.assertEqual(result["state"]["next_step_confirmation"]["target_step"], 2)
         self.assertEqual(self.path.read_bytes(), before)
+
+    def test_uploaded_verification_resumes_pending_blocked_and_complete(self):
+        for mode in ("live", "dry-run"):
+            for complete in (False, True):
+                with self.subTest(mode=mode, complete=complete):
+                    state = self.verification_state(mode, complete)
+                    self.write_record(state)
+                    before = self.path.read_bytes()
+                    result = self.check_at(11)
+                    self.assertIn("Step 4a", result["reason"])
+                    self.assertEqual(self.path.read_bytes(), before)
+                    self.assertIsNone(result["state"]["email"])
+        state = self.verification_state(complete=False)
+        state["status"] = "candidate_verification_blocked"
+        state["candidate_verification"].update(
+            status=state["status"], blockers=["Signature check failed"]
+        )
+        self.write_record(state)
+        self.check_at(11)
+
+    def test_opening_email_requires_new_verification_even_for_legacy_records(self):
+        for variant in ("missing", "pending", "blocked"):
+            state = self.email_state()
+            if variant == "missing":
+                state.pop("candidate_verification")
+            else:
+                state["candidate_verification"].update(
+                    status="candidate_verification_blocked"
+                    if variant == "blocked"
+                    else "verifying_uploaded_candidate",
+                    completed_at=None,
+                )
+            self.write_record(state)
+            with self.assertRaises(ValueError):
+                self.check_at(11)
+
+    def test_every_uploaded_check_must_pass_with_evidence(self):
+        for name in VERIFICATION_CHECKS:
+            for variant in ("missing", "failed", "no_evidence", "future"):
+                with self.subTest(check=name, variant=variant):
+                    state = self.verification_state()
+                    checks = state["candidate_verification"]["checks"]
+                    if variant == "missing":
+                        checks.pop(name)
+                    elif variant == "failed":
+                        checks[name]["result"] = "failed"
+                    elif variant == "no_evidence":
+                        checks[name]["evidence"] = ""
+                    else:
+                        checks[name]["at"] = "2030-01-03T10:00:00Z"
+                    self.write_record(state)
+                    with self.assertRaises(ValueError):
+                        self.check_at(11)
+
+    def test_uploaded_identity_and_read_approval_cannot_be_skipped(self):
+        for variant in (
+            "hash",
+            "filename",
+            "fingerprint",
+            "revision",
+            "read_approval",
+            "read_scope",
+            "read_failed",
+            "late_approval",
+            "early_entry",
+            "simulated_live",
+            "blockers",
+        ):
+            with self.subTest(variant=variant):
+                state = self.verification_state("live")
+                verification = state["candidate_verification"]
+                operation = state["external_operations"][0]
+                if variant == "hash":
+                    verification["files"][0]["sha512"] = "f" * 128
+                elif variant == "filename":
+                    verification["files"][0]["name"] = "other.tar.gz"
+                elif variant == "fingerprint":
+                    verification["signing_fingerprint"] = "B" * 40
+                elif variant == "revision":
+                    verification["source_revision"] = 0
+                elif variant == "read_approval":
+                    operation["approval"] = None
+                elif variant == "read_scope":
+                    operation["inputs"]["source_revision"] = 101
+                elif variant == "read_failed":
+                    operation["status"] = "failed"
+                elif variant == "late_approval":
+                    operation["approval"]["at"] = "2030-01-02T10:12:45Z"
+                elif variant == "early_entry":
+                    verification["entry_confirmation"]["at"] = "2030-01-02T10:11:00Z"
+                elif variant == "simulated_live":
+                    verification["simulated"] = True
+                else:
+                    verification["blockers"] = ["Build unresolved"]
+                self.write_record(state)
+                with self.assertRaises(ValueError):
+                    self.check_at(11)
+
+    def test_email_approval_is_bound_to_completed_verification(self):
+        for variant in (
+            "early_email",
+            "changed_revision",
+            "changed_bytes",
+            "changed_review",
+            "unlinked_artifacts",
+        ):
+            with self.subTest(variant=variant):
+                state = self.email_state("live", complete=True)
+                verification = state["candidate_verification"]
+                if variant == "early_email":
+                    state["email"]["entry_confirmation"]["at"] = "2030-01-02T10:12:30Z"
+                elif variant == "changed_revision":
+                    verification["source_revision"] = 101
+                    state["external_operations"][0]["inputs"]["source_revision"] = 101
+                elif variant == "changed_bytes":
+                    verification["files"][0]["sha512"] = "f" * 128
+                    state["source_release"]["artifacts"][0]["sha512"] = "f" * 128
+                elif variant == "changed_review":
+                    verification["checks"]["build"]["evidence"] = "Replacement log"
+                else:
+                    state["email"]["artifact_review"].pop("verification_sha256")
+                self.write_record(state)
+                with self.assertRaises(ValueError):
+                    self.check_at(11)
 
     def test_email_cannot_bypass_docker_readiness_or_candidate_entry(self):
         for variant in (

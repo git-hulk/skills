@@ -1,4 +1,4 @@
-# Step 4: Draft the release vote email
+# Step 4b: Draft the release vote email
 
 This is the community vote email following candidate preparation and Docker
 readiness in the [release guide](https://kvrocks.apache.org/community/create-a-release/).
@@ -7,11 +7,14 @@ drafting. This procedure prepares an unsent message only.
 
 ## Entry and sender checkpoint
 
-1. Read the per-version JSON and run the state checker. Require completed step 3
-   with matching candidate, workflow, and image evidence (authorized fixtures
-   for dry-run). Confirm entry to step 4. Record `email.entry_confirmation` with
-   `target_step: 4`, the candidate tag and prepared commit; preserve earlier
-   approvals and evidence. Defining this step does not approve entering it.
+1. Read the per-version JSON and run the state checker. Require completed
+   [step 4a verification](verify-candidate.md), retaining step-3 Docker evidence.
+   Every uploaded artifact check must pass (authorized simulated fixtures for
+   dry-run) before entering this phase, including sender discovery or composing
+   previews. Confirm entry to step 4b. Record `email.entry_confirmation` with
+   `target_step: 4`, candidate tag, prepared commit, and `verification_sha256` equal
+   to `publication_plan_sha256(candidate_verification)`; preserve earlier evidence.
+   Defining this step does not approve entering it.
 2. Discover Gmail tools through the available connector/tool catalog. If a
    discovery tool exists, search before deciding Gmail is unavailable. A Calendar
    connection, browser login, plugin listing, or cached account address does not
@@ -85,16 +88,14 @@ name. Add release notes or claims about validation only when supported by eviden
 The 72-hour vote wording is separate from the cherry-pick deadline; do not set a
 vote deadline from draft creation time.
 
-Source tag staging does **not** prove that source artifacts have been uploaded to
-Apache dist. Before declaring the email ready for handoff, obtain the actual
-candidate directory URL and verify under approved read scope that the archive,
-signature, checksum, and KEYS correspond to the candidate and signing key.
-Record `email.artifact_review`. This step does not perform an SVN upload.
-If evidence or links are missing, a local preview may use explicit
-`[SOURCE CANDIDATE URL REQUIRED]` placeholders, with concrete `email.blockers`.
-Keep `awaiting_email_review`; do not create a Gmail draft or request sending a
-message with unresolved placeholders or unsupported claims. Do not retroactively
-mark the source upload complete.
+Use the source URL, KEYS URL, and full verification evidence from completed
+step 4a. Before handoff, reconfirm the staged identity through approved reads and
+record `email.artifact_review`, including the same `verification_sha256`. This
+link review does not replace the required checksum/signature, source/license, and
+build checks. Changed or missing evidence invalidates the draft approval and
+blocks handoff; follow the verification procedure's reconciliation rules. Do not
+create a Gmail draft or request sending with unresolved placeholders or claims.
+This step does not upload artifacts or mark an unobserved upload complete.
 
 Store From, To, Cc, Bcc, subject, body, and composed time in JSON. Show them **in
 full inline** when requesting content approval. A file link or summary does not
@@ -153,7 +154,8 @@ external operations at `step: 5`; leave the opening `email` object unchanged.
 
 ## Email state
 
-Keep `email: null` before step 4. Initialize this object only after entry approval:
+Keep `email: null` through step 4a. Initialize this object only after successful
+verification and separate email entry approval:
 
 ```json
 {
@@ -164,7 +166,8 @@ Keep `email: null` before step 4. Initialize this object only after entry approv
     "simulated": true,
     "target_step": 4,
     "candidate_tag": "ACTUAL_CANDIDATE_TAG",
-    "prepared_commit": "ACTUAL_PREPARED_COMMIT"
+    "prepared_commit": "ACTUAL_PREPARED_COMMIT",
+    "verification_sha256": "HASH_OF_COMPLETED_CANDIDATE_VERIFICATION"
   },
   "connection": {
     "status": "unverified",
@@ -194,7 +197,7 @@ Connection status is `connected`, `unavailable`, or `unverified`; record the rea
 in history without claiming a missing tool proves the account is disconnected.
 Use `method: gmail` only with verified draft support for the selected sender;
 otherwise `manual`. An artifact review records `candidate_tag`, `prepared_commit`,
-`source_url`, `keys_url`, `checked_at`, `mode`, and `simulated`, with read/fixture
+`source_url`, `keys_url`, `verification_sha256`, `checked_at`, `mode`, and `simulated`, with read/fixture
 evidence in history and external operations. Content approval stores
 `{by, at, mode, payload_sha256}`. A real draft stores
 `{id, account_address, from, created_at}`; never populate it with a simulated ID.

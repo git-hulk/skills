@@ -57,6 +57,7 @@ status file.
   "next_step_confirmation": null,
   "source_release": null,
   "docker": null,
+  "candidate_verification": null,
   "email": null,
   "vote": null,
   "result_email": null,
@@ -131,7 +132,12 @@ Field meanings:
   and image evidence in [the Docker readiness procedure](docker-readiness.md).
   Keep the original `next_step_confirmation` for step 2; record step-3 confirmation
   in `docker.entry_confirmation` so earlier approval evidence is not overwritten.
-- `email`: null before step 4; then use the sender, content, entry confirmation,
+- `candidate_verification`: null before step 4a; then use the uploaded-byte
+  manifest, approved reads, checklist evidence, blockers, and completion in
+  [the verification procedure](verify-candidate.md). Add as null to older records
+  without changing their saved step. Missing evidence at email or later requires
+  reconciliation before continuing; never fabricate past successful checks.
+- `email`: null through step 4a; then use the sender, content, entry confirmation,
   and Gmail draft/manual handoff evidence in [the email procedure](vote-email.md).
   Store subject and body in this JSON object. An optional plain-text export is
   message content only, never a second status record. Sender confirmation must
@@ -217,7 +223,23 @@ preserve prior evidence in history and clear the previous publication/image
 observations and completion time before monitoring it. Expiration of a watch
 window alone does not mean failure or readiness.
 
-Step 4 uses `step: 4` and retains completed Docker readiness evidence:
+Step 4 retains numeric `step: 4` and completed Docker readiness evidence. It has
+two explicit phases so earlier step numbers remain stable. Phase **4a: Verify
+the uploaded release candidate** uses:
+
+| Status                                | Meaning / permitted next action                                                                        |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `verifying_uploaded_candidate`        | Resume approved downloads and outstanding checklist checks; email remains null.                        |
+| `candidate_verification_blocked`      | Resolve missing uploads, failed/incomplete checks, or evidence conflicts before email drafting.        |
+| `uploaded_candidate_verified`         | All checks passed on the staged bytes in release mode; show evidence and confirm entry to 4b.          |
+| `dry_run_uploaded_candidate_verified` | Authorized fixture checks passed; confirm the simulated transition without claiming real verification. |
+
+Store this status inside `candidate_verification` too, retaining its completed
+status after advancing. Its entry confirmation targets step 4 and phase
+`verify_uploaded_candidate`. See [the verification procedure](verify-candidate.md)
+for the manifest, approvals, signer, checklist, and invalidation rules.
+
+Phase **4b: Draft the release vote email** requires completed 4a verification:
 
 | Status                   | Meaning / permitted next action                                                                        |
 | ------------------------ | ------------------------------------------------------------------------------------------------------ |
@@ -229,7 +251,8 @@ Step 4 uses `step: 4` and retains completed Docker readiness evidence:
 | `dry_run_email_prepared` | Local message and handoff were rehearsed; no Gmail draft was created and no real send is requested.    |
 
 Entry confirmation belongs in `email.entry_confirmation`, targeting step 4 and
-binding the candidate tag and prepared commit. Keep subject/body/composed time
+binding the candidate tag, prepared commit, and `verification_sha256` computed
+with `publication_plan_sha256(candidate_verification)`. Keep subject/body/composed time
 null before sender confirmation. See [the email procedure](vote-email.md) for
 payload approval, artifact checks, connection state, and duplicate prevention.
 
@@ -440,7 +463,10 @@ the agent must actually complete the objection review and manager confirmation
 checkpoint. For step-2 records the helper also checks the saved transition
 evidence. For step 3 it checks source-staging/entry evidence and consistency of
 recorded readiness results. Exit `0` still means the deadline gate elapsed, not
-that Docker is ready. For step 4 it also checks prior readiness, sender-before-content
+that Docker is ready. For step 4a it validates recorded verification entry,
+uploaded/prepared hash agreement, signer identity, all seven check results, and
+the download approval scope. For step 4b and later it requires that evidence and
+its hash binding to the email. It also checks sender-before-content
 ordering, content approval, and consistency of saved draft/handoff evidence.
 It cannot prove that a remote verification or human approval actually happened.
 For step 5, inspect `vote_evaluation`: it validates the independent vote clock and

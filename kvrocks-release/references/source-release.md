@@ -6,6 +6,8 @@ pushing the candidate tag. SVN artifact upload is a separate following section;
 do not perform it under this step. The user's deadline and confirmation gates
 apply before any release preparation even where the guide describes earlier
 branch creation. Reading or editing this skill does not start a release step.
+Local validation here does not replace [step 4a verification](verify-candidate.md)
+of the actual uploaded archive before the vote email.
 
 ## Enter and resume
 

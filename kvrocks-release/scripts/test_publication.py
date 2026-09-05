@@ -228,10 +228,11 @@ class PublicationTest(unittest.TestCase):
 
     def test_entry_preserves_vote_and_result_without_archive_checks(self):
         state = self.state()
+        operations = copy.deepcopy(state["external_operations"])
         result = self.check(state)
         self.assertEqual(result["vote_evaluation"]["gate"], "passed")
         self.assertEqual(result["state"]["step"], 6)
-        self.assertEqual(result["state"]["external_operations"], [])
+        self.assertEqual(result["state"]["external_operations"], operations)
 
     def test_missing_early_or_changed_vote_and_incomplete_result_block_entry(self):
         for variant in ("missing", "no", "early", "changed", "result"):

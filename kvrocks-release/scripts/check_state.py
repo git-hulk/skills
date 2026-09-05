@@ -25,6 +25,21 @@ DOCKER_STATUSES = {
     "docker_ready",
     "dry_run_docker_ready",
 }
+VERIFICATION_STATUSES = {
+    "verifying_uploaded_candidate",
+    "candidate_verification_blocked",
+    "uploaded_candidate_verified",
+    "dry_run_uploaded_candidate_verified",
+}
+VERIFICATION_CHECKS = {
+    "downloads",
+    "checksums",
+    "signatures",
+    "archive",
+    "license_notice",
+    "license_headers",
+    "build",
+}
 EMAIL_STATUSES = {
     "awaiting_email_sender",
     "awaiting_email_review",
@@ -274,6 +289,139 @@ def confirmed_at(confirmation, mode):
     return instant(confirmation.get("at"))
 
 
+def check_candidate_verification(state, current, *, require_complete=False):
+    verification = state.get("candidate_verification")
+    if verification is None:
+        raise ValueError(
+            "Uploaded candidate verification is required before email drafting"
+        )
+    if not isinstance(verification, dict):
+        raise TypeError("Uploaded candidate verification must be an object")
+    mode = state["mode"]
+    simulated = mode == "dry-run"
+    source = state["source_release"]
+    entry = verification.get("entry_confirmation")
+    entered = confirmed_at(entry, mode)
+    if (
+        entry.get("target_step") != 4
+        or entry.get("phase") != "verify_uploaded_candidate"
+        or entry.get("simulated") is not simulated
+        or verification.get("mode") != mode
+        or verification.get("simulated") is not simulated
+        or any(
+            entry.get(key) != source[key]
+            for key in ("candidate_tag", "prepared_commit")
+        )
+        or not instant(state["docker"]["completed_at"]) <= entered <= current
+        or not isinstance(verification.get("blockers"), list)
+    ):
+        raise ValueError(
+            "Verification entry must confirm the candidate after Docker readiness"
+        )
+    status = verification.get("status")
+    if status not in VERIFICATION_STATUSES:
+        raise ValueError("Unknown uploaded candidate verification status")
+    complete = status in {
+        "uploaded_candidate_verified",
+        "dry_run_uploaded_candidate_verified",
+    }
+    if not complete:
+        if require_complete or verification.get("completed_at") is not None:
+            raise ValueError(
+                "Complete uploaded candidate verification before drafting the vote email"
+            )
+        return
+    completed = instant(verification.get("completed_at"))
+    if (
+        (status == "dry_run_uploaded_candidate_verified") != simulated
+        or verification["blockers"]
+        or not entered <= completed <= current
+        or not re.fullmatch(
+            r"https://dist\.apache\.org/repos/dist/dev/kvrocks/[^\s?#]+",
+            verification.get("source_url") or "",
+        )
+        or type(verification.get("source_revision")) is not int
+        or verification["source_revision"] <= 0
+        or verification.get("keys_url") != "https://downloads.apache.org/kvrocks/KEYS"
+        or not re.fullmatch(
+            r"[0-9a-fA-F]{40}|[0-9a-fA-F]{64}",
+            verification.get("signing_fingerprint") or "",
+        )
+        or verification["signing_fingerprint"] != source.get("signing_fingerprint")
+        or (simulated and not verification.get("evidence_source"))
+    ):
+        raise ValueError(
+            "Verification must bind the staged revision, confirmed signer, mode, and completion"
+        )
+    archive = f"apache-kvrocks-{state['version']}-src.tar.gz"
+    files = publication_files(verification.get("files"))
+    artifacts = source.get("artifacts") or []
+    if (
+        set(files) != {archive, archive + ".asc", archive + ".sha512"}
+        or any(
+            item.get("status") != ("simulated" if simulated else "actual")
+            for item in artifacts
+        )
+        or files
+        != publication_files(
+            [
+                {"name": Path(item["path"]).name, "sha512": item.get("sha512")}
+                for item in artifacts
+            ]
+        )
+    ):
+        raise ValueError(
+            "Downloaded files must match the prepared candidate artifact hashes"
+        )
+    checks = verification.get("checks")
+    if not isinstance(checks, dict) or set(checks) != VERIFICATION_CHECKS:
+        raise ValueError("Every uploaded candidate checklist item is required")
+    for check in checks.values():
+        if (
+            not isinstance(check, dict)
+            or check.get("result") != ("simulated_pass" if simulated else "passed")
+            or not entered <= instant(check.get("at")) <= completed
+            or any(
+                not isinstance(check.get(key), str) or not check[key].strip()
+                for key in ("command_or_review", "evidence")
+            )
+        ):
+            raise ValueError(
+                "Verification checks require passing results and dated command/review evidence"
+            )
+    operation_ids = verification.get("read_operation_ids")
+    if not isinstance(operation_ids, list) or not operation_ids:
+        raise ValueError(
+            "Record the approved artifact and KEYS read scope or authorized dry-run fixtures"
+        )
+    for operation_id in operation_ids:
+        matches = [
+            item
+            for item in state.get("external_operations", [])
+            if item.get("id") == operation_id
+        ]
+        if len(matches) != 1:
+            raise ValueError("Verification read operation is missing or ambiguous")
+        operation = matches[0]
+        approved = confirmed_at(operation.get("approval"), mode)
+        if (
+            operation.get("mode") != mode
+            or operation.get("step") != 4
+            or operation.get("kind") != "read"
+            or operation.get("status") != ("simulated" if simulated else "succeeded")
+            or operation.get("inputs")
+            != {
+                "source_url": verification["source_url"],
+                "source_revision": verification["source_revision"],
+                "keys_url": verification["keys_url"],
+            }
+            or not entered <= approved <= instant(checks["downloads"]["at"])
+        ):
+            raise ValueError(
+                "Verification downloads must follow approval of the exact resource scope"
+            )
+
+
 def check_email_state(
     state, current, *, email=None, status=None, target_step=4, not_before=None
 ):
@@ -284,21 +432,24 @@ def check_email_state(
     simulated = mode == "dry-run"
     status = state["status"] if status is None else status
     source = state["source_release"]
+    check_candidate_verification(state, current, require_complete=True)
+    verification = state["candidate_verification"]
     entry = email.get("entry_confirmation")
     entered = confirmed_at(entry, mode)
     if (
         entry.get("target_step") != target_step
         or entry.get("simulated") is not simulated
+        or entry.get("verification_sha256") != publication_plan_sha256(verification)
         or any(
             entry.get(key) != source[key]
             for key in ("candidate_tag", "prepared_commit")
         )
-        or not (not_before or instant(state["docker"]["completed_at"]))
+        or not (not_before or instant(verification["completed_at"]))
         <= entered
         <= current
     ):
         raise ValueError(
-            "Email entry must follow Docker readiness and confirm the exact candidate"
+            "Email entry must follow uploaded candidate verification and confirm the exact evidence"
         )
     if status == "awaiting_email_sender":
         if any(
@@ -380,7 +531,9 @@ def check_email_state(
             artifacts.get("source_url") or "",
         )
         or artifacts.get("keys_url") != "https://downloads.apache.org/kvrocks/KEYS"
-        or not instant(source["completed_at"])
+        or artifacts.get("source_url") != verification["source_url"]
+        or artifacts.get("verification_sha256") != publication_plan_sha256(verification)
+        or not instant(verification["completed_at"])
         <= instant(artifacts.get("checked_at"))
         <= approved
     ):
@@ -1423,7 +1576,10 @@ def inspect_record(path, now=None):
             (state.get("step") == 1 and state.get("status") in STATUSES)
             or (state.get("step") == 2 and state.get("status") in SOURCE_STATUSES)
             or (state.get("step") == 3 and state.get("status") in DOCKER_STATUSES)
-            or (state.get("step") == 4 and state.get("status") in EMAIL_STATUSES)
+            or (
+                state.get("step") == 4
+                and state.get("status") in EMAIL_STATUSES | VERIFICATION_STATUSES
+            )
             or (state.get("step") == 5 and state.get("status") in VOTE_STATUSES)
             or (state.get("step") == 6 and state.get("status") in PUBLICATION_STATUSES)
             or (state.get("step") == 7 and state.get("status") in WEBSITE_STATUSES)
@@ -1460,6 +1616,7 @@ def inspect_record(path, now=None):
         | SOURCE_STATUSES
         | DOCKER_STATUSES
         | EMAIL_STATUSES
+        | VERIFICATION_STATUSES
         | VOTE_STATUSES
         | PUBLICATION_STATUSES
         | WEBSITE_STATUSES
@@ -1529,8 +1686,19 @@ def inspect_record(path, now=None):
             check_docker_state(state, current, require_ready=state["step"] >= 4)
             reason = "Step 3 active; check Docker status and evidence; external polling requires confirmed scope"
         if state["step"] == 4:
-            check_email_state(state, current)
-            reason = "Step 4 active; confirm sender before composing; a draft or manual handoff is not sent mail"
+            if state["status"] in VERIFICATION_STATUSES:
+                check_candidate_verification(state, current)
+                if (
+                    state["candidate_verification"]["status"] != state["status"]
+                    or state.get("email") is not None
+                ):
+                    raise ValueError(
+                        "Verification phase must retain its status and cannot begin email drafting"
+                    )
+                reason = "Step 4a active; verify the uploaded candidate and confirm entry to email drafting after all checks pass"
+            else:
+                check_email_state(state, current)
+                reason = "Step 4b active; confirm sender before composing; a draft or manual handoff is not sent mail"
         if state["step"] == 5:
             vote_evaluation = check_vote_state(state, current)
             reason = "Step 5 active; " + vote_evaluation["reason"]

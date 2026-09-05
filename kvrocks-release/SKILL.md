@@ -1,6 +1,6 @@
 ---
 name: kvrocks-release
-description: Prepare and resume Apache Kvrocks releases with per-version JSON state and human confirmation. Covers proposals, source candidates, Docker readiness, vote and result drafts, publication, the website PR, and the final announcement. Asks for version and mode, reports and confirms the saved step before continuing, and checks resources before creation.
+description: Prepare and resume Apache Kvrocks releases with per-version JSON state and human confirmation. Covers proposals, source candidates, Docker readiness, uploaded artifact verification, vote and result drafts, publication, the website PR, and the final announcement. Asks for version and mode, reports and confirms the saved step before continuing, and checks resources before creation.
 ---
 
 # Kvrocks Release
@@ -8,7 +8,8 @@ description: Prepare and resume Apache Kvrocks releases with per-version JSON st
 Implement one release step at a time as the release manager supplies it. Defined
 steps are (1) the release-proposal discussion, (2) Create source releases and
 stage, (3) Build and push Docker images, which monitors the existing tag-triggered
-workflow and verifies image readiness, (4) Draft the release vote email, and
+workflow and verifies image readiness, (4a) Verify the uploaded release candidate,
+(4b) Draft the release vote email, and
 (5) Wait for voting and draft the vote result, (6) Publish SVN artifacts and
 Docker images, then ask the manager to publish GitHub release notes, and
 (7) Create a PR to update website release links, and (8) Ask the release manager
@@ -101,15 +102,16 @@ operation or the owning step's state. Recheck on resumption, after an uncertain
 write, or when the target or evidence changes; a past absence cannot justify a
 new attempt. Preserve previous observations in history.
 
-| Step/resource                                                       | Required check before creation                                                                                                                                            |
-| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Proposal discussion                                                 | Search matching version discussions and inspect any candidate's repository, category, title, and body.                                                                    |
-| Source checkout, release branch, candidate tag, archives/signatures | Inspect local paths, Git refs/commits, artifact hashes, and approved remote branch/tag reads before packaging or pushing. Resume matching work instead of overwriting it. |
-| Docker workflow and image                                           | Inspect the existing tag-triggered run and image; step 3 never creates or reruns them. Before step-6 promotion, inspect the source digest and both destination tags.      |
-| Vote/result Gmail draft                                             | Search/read matching drafts in the confirmed account before the first draft creation too; compare sender, recipients, subject, body, and candidate. Preserve human edits. |
-| SVN release directory and GitHub release                            | Check source/destination contents and final tag/release identity; reuse a match. GitHub publication remains the manager's manual action.                                  |
-| Website fork, branch, release entry, PR                             | Inspect existing fork/refs, release data, and matching PRs before creating or pushing anything.                                                                           |
-| Vote and announcement handoffs                                      | Read saved answers and completion first; do not repeat completed handoffs. Do not reintroduce vote-thread/PMC checks or automatic email sending.                          |
+| Step/resource                                                       | Required check before creation                                                                                                                                                        |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Proposal discussion                                                 | Search matching version discussions and inspect any candidate's repository, category, title, and body.                                                                                |
+| Source checkout, release branch, candidate tag, archives/signatures | Inspect local paths, Git refs/commits, artifact hashes, and approved remote branch/tag reads before packaging or pushing. Resume matching work instead of overwriting it.             |
+| Docker workflow and image                                           | Inspect the existing tag-triggered run and image; step 3 never creates or reruns them. Before step-6 promotion, inspect the source digest and both destination tags.                  |
+| Vote/result Gmail draft                                             | Search/read matching drafts in the confirmed account before the first draft creation too; compare sender, recipients, subject, body, and candidate. Preserve human edits.             |
+| Uploaded candidate verification                                     | Inspect the actual staging inventory/revision and local download workspace; verify the downloaded bytes before entering email drafting. Confirm all downloads and dependency fetches. |
+| SVN release directory and GitHub release                            | Check source/destination contents and final tag/release identity; reuse a match. GitHub publication remains the manager's manual action.                                              |
+| Website fork, branch, release entry, PR                             | Inspect existing fork/refs, release data, and matching PRs before creating or pushing anything.                                                                                       |
+| Vote and announcement handoffs                                      | Read saved answers and completion first; do not repeat completed handoffs. Do not reintroduce vote-thread/PMC checks or automatic email sending.                                      |
 
 Dry-run rehearses the same decision using approved reads or explicitly authorized
 simulated evidence. Label simulations and leave real creation results null.
@@ -147,7 +149,10 @@ simulated evidence. Label simulations and leave real creation results null.
    local file means the release resources do not exist.
    For saved step-2 state, resume via [the source-release procedure](references/source-release.md).
    For step 3, use [the Docker readiness procedure](references/docker-readiness.md).
-   For step 4, use [the email drafting procedure](references/vote-email.md).
+   For step 4 verification statuses, use [the uploaded candidate verification procedure](references/verify-candidate.md).
+   For step 4 email statuses, require completed verification first, then use
+   [the email drafting procedure](references/vote-email.md). These are phases 4a
+   and 4b; numeric step IDs remain stable for existing records.
    For step 5, use [the voting procedure](references/voting.md).
    For step 6, use [the publication procedure](references/publication.md).
    For step 7, use [the website PR procedure](references/website-pr.md).
@@ -371,10 +376,24 @@ Use bounded polling under one confirmed scope instead of asking on every poll.
 Failure, cancellation, a missing run, or an unavailable image must not be reported
 as ready. Stop after readiness and obtain confirmation before the next release step.
 
-## Step 4: Draft the release vote email
+## Step 4a: Verify the uploaded release candidate
+
+Follow [the candidate verification procedure](references/verify-candidate.md).
+After Docker readiness, confirm entry and record `candidate_verification` in the
+per-version JSON. Under separately approved reads, download the actual staged
+archive, signature, checksum, and KEYS. Verify hashes and signer identity, inspect
+archive contents, LICENSE/NOTICE and license headers, and build the downloaded
+source. Missing upload or any incomplete/failed check blocks the vote email.
+Show the evidence and confirm entry to email drafting only after all checks pass.
+Dry-run uses explicitly authorized, labeled fixtures and never claims real
+verification. Keep numeric `step: 4` with verification-specific statuses so saved
+records remain readable; report this phase as step 4a when resuming.
+
+## Step 4b: Draft the release vote email
 
 Follow [the email drafting procedure](references/vote-email.md). Confirm entry
-after Docker readiness and save `email.entry_confirmation` separately. Check
+after uploaded candidate verification and save `email.entry_confirmation`, including
+the verification evidence hash, separately. Check
 whether a Gmail connector is available and can create drafts for the intended
 account. **Confirm the exact From address with the release manager before
 composing the subject or body**, including for the manual fallback and dry-run.
