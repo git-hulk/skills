@@ -57,9 +57,9 @@ class WebsiteTest(unittest.TestCase):
             "mode": mode,
             "simulated": mode == "dry-run",
             "prepared_at": "2030-01-05T11:20:00Z",
-            "evidence_source": "Authorized isolated website fixture"
-            if mode == "dry-run"
-            else None,
+            "evidence_source": (
+                "Authorized isolated website fixture" if mode == "dry-run" else None
+            ),
             "base_branch": "main",
             "base_commit": "d" * 40,
             "head_repository": "test-manager/kvrocks-website",
@@ -162,9 +162,9 @@ class WebsiteTest(unittest.TestCase):
                 elif variant == "entry":
                     state["website"]["entry_confirmation"]["target_step"] = 6
                 elif variant == "clock":
-                    state["website"]["entry_confirmation"]["at"] = (
-                        "2030-01-05T11:05:00Z"
-                    )
+                    state["website"]["entry_confirmation"][
+                        "at"
+                    ] = "2030-01-05T11:05:00Z"
                 else:
                     state["website"]["entry_confirmation"]["publication_sha256"] = (
                         "0" * 64
@@ -186,9 +186,9 @@ class WebsiteTest(unittest.TestCase):
                 elif variant == "rc":
                     website["plan"]["links"]["archive"] += "-rc1"
                 elif variant == "prefix":
-                    website["plan"]["links"]["github"] = (
-                        "https://github.com/apache/kvrocks/releases/tag/vv9.9.0"
-                    )
+                    website["plan"]["links"][
+                        "github"
+                    ] = "https://github.com/apache/kvrocks/releases/tag/vv9.9.0"
                 else:
                     website["plan"]["head_branch"] = "main"
                 with self.assertRaises(ValueError):
@@ -200,11 +200,15 @@ class WebsiteTest(unittest.TestCase):
         state["status"] = "dry_run_website_pr_prepared"
         with self.assertRaises(ValueError):
             self.check(state)
-        for index in (-1, -2):
-            state = self.state(prepared=True, complete=True)
-            state["external_operations"][index]["approval"] = None
-            with self.assertRaises(ValueError):
-                self.check(state)
+        for mode in ("dry-run", "live"):
+            for index in (-1, -2):
+                with self.subTest(mode=mode, index=index):
+                    state = self.state(mode, prepared=True, complete=True)
+                    state["external_operations"][index].update(
+                        approval=None, checked_at="2030-01-05T11:21:00Z"
+                    )
+                    with self.assertRaises(ValueError):
+                        self.check(state)
 
     def test_dry_run_and_live_completion_keep_distinct_remote_results(self):
         for mode in ("dry-run", "live"):
@@ -294,6 +298,41 @@ class WebsiteTest(unittest.TestCase):
             op["approval"]["at"] = "2030-01-05T11:15:00Z"
         self.check(state)
 
+    def test_existing_matching_pr_can_resume_without_read_approval(self):
+        state = self.state("live", prepared=True, complete=True)
+        for op in state["external_operations"][-2:]:
+            op.update(kind="read", approval=None, checked_at="2030-01-05T11:15:00Z")
+        self.check(state)
+
+    def test_existing_pr_read_requires_valid_check_time(self):
+        for index in (-1, -2):
+            for checked_at in (
+                None,
+                "invalid",
+                "2030-01-05T11:15:00",
+                "2030-01-05T11:09:00Z",
+                "2030-01-05T11:25:00Z",
+                "2030-01-05T12:01:00Z",
+            ):
+                with self.subTest(index=index, checked_at=checked_at):
+                    state = self.state("live", prepared=True, complete=True)
+                    for op in state["external_operations"][-2:]:
+                        op.update(
+                            kind="read",
+                            approval=None,
+                            checked_at="2030-01-05T11:15:00Z",
+                        )
+                    state["external_operations"][index]["checked_at"] = checked_at
+                    with self.assertRaises(ValueError):
+                        self.check(state)
+
+    def test_simulated_matching_pr_reads_still_require_approval(self):
+        state = self.state(prepared=True, complete=True)
+        for op in state["external_operations"][-2:]:
+            op.update(kind="read", approval=None, checked_at="2030-01-05T11:15:00Z")
+        with self.assertRaises(ValueError):
+            self.check(state)
+
     def test_diff_cannot_hide_an_unrelated_controller_change(self):
         state = self.state(prepared=True)
         state["website"]["plan"]["diff"] = state["website"]["plan"]["diff"].replace(
@@ -336,14 +375,18 @@ class WebsiteTest(unittest.TestCase):
                             mode, "2030-01-05T11:11:00Z"
                         ),
                         "status": "simulated" if mode == "dry-run" else "succeeded",
-                        "result": None
-                        if mode == "dry-run"
-                        else copy.deepcopy(existing),
+                        "result": (
+                            None if mode == "dry-run" else copy.deepcopy(existing)
+                        ),
                     }
                 )
                 state["status"] = "website_already_updated"
                 self.check(state)
-                state["external_operations"][-1]["approval"] = None
+                op = state["external_operations"][-1]
+                op.update(approval=None, checked_at="2030-01-05T11:15:00Z")
+                if mode == "live":
+                    self.check(state)
+                    op["checked_at"] = "2030-01-05T11:16:00Z"
                 with self.assertRaises(ValueError):
                     self.check(state)
 

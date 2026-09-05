@@ -16,8 +16,9 @@ entering or resuming step 7; authoring it does not advance a release.
 2. Inspect an available website checkout locally, including its instructions,
    remotes, worktree status, release data, build scripts, and workflows. Local
    inspection does not establish the current upstream branch or file contents.
-   Prepare and confirm remote reads/fetches of the exact website repository,
-   default branch, release data, existing matching PRs, and final public links.
+   Inspect the exact website repository, default branch, release data, and matching
+   PRs on GitHub without read confirmation. Confirm clone/fetch and non-GitHub
+   public-link reads under the external-operation rule.
    A failed duplicate lookup does not establish that no PR exists.
 3. Use an isolated checkout/worktree based on the verified upstream base SHA.
    Keep other user changes intact. Record the base repository/branch/SHA and the
@@ -26,9 +27,10 @@ entering or resuming step 7; authoring it does not advance a release.
    A fork must be identified and its creation separately confirmed if necessary;
    do not silently create a fork, push to an unrelated remote, or push to `main`.
 
-In dry-run, approved remote reads may run, or explicitly authorized local fixtures
-may supply simulated evidence. Keep fork creation, pushes, and PR creation
-simulated. No remote-capable command is run solely to test its dry-run flag.
+In dry-run, GitHub checks and other approved remote reads may run, or explicitly
+authorized local fixtures may supply simulated evidence. Keep fork creation,
+pushes, and PR creation simulated. No remote-capable command is run solely to test
+its dry-run flag.
 
 ## Prepare the change and verify it
 
@@ -54,10 +56,10 @@ https://downloads.apache.org/kvrocks/VERSION/apache-kvrocks-VERSION-src.tar.gz.a
 https://github.com/apache/kvrocks/releases/tag/vVERSION
 ```
 
-Use the published archive basename and final tag from the release record. Under
-approved reads, check that the public links resolve to this release; successful
-SVN promotion alone does not prove the download mirrors have synchronized. If
-unavailable or mismatched, preserve the patch and record the blocker. A dry-run
+Use the published archive basename and final tag from the release record. Check
+that the public links resolve to this release, confirming non-GitHub reads only.
+Successful SVN promotion alone does not prove the download mirrors have
+synchronized. If unavailable or mismatched, preserve the patch and record the blocker. A dry-run
 may use explicitly authorized simulated link results; never claim live checks.
 
 Format the touched file according to repository instructions, inspect the scoped
@@ -92,15 +94,16 @@ current workflow when preparing a live operation. Do not enable auto-merge,
 request reviewers, post comments, merge, or deploy as part of this step.
 
 After live push approval, push only the prepared website branch and verify its
-remote SHA under the approved read scope. After PR approval, create the PR with
-explicit base/head and the reviewed title/body. Prefer a structured connector
-request; with `gh pr create`, use a local `--body-file` and explicit `--repo`,
+remote SHA through a GitHub read without another confirmation. After PR approval,
+create the PR with explicit base/head and the reviewed title/body. Prefer a
+structured connector request; with `gh pr create`, use a local `--body-file` and explicit `--repo`,
 `--base`, and `--head` to avoid implicit pushes or the wrong repository. Save the
 returned PR URL/number and verify repository, head SHA, base, and payload.
 
 On resume, keep a verified push and continue the uncompleted PR operation. If a
 push or create response is ambiguous, record `website_push_uncertain` or
-`website_pr_uncertain` and reconcile through approved reads before retrying.
+`website_pr_uncertain` and reconcile through read-only GitHub checks without
+asking for read approval before retrying.
 Reuse an existing matching PR instead of opening another. Changed diff, commits,
 destinations, or PR content require review of the changed scope; PR-body-only
 changes do not invalidate an unchanged push approval.
@@ -154,21 +157,24 @@ Top-level statuses are `preparing_website_pr`, `awaiting_website_pr_review`,
   available, and clearly label authorized simulated preparation.
 - Push operations bind `inputs.payload_sha256` to `website_push_sha256(plan)`;
   PR operations bind it to `website_pr_sha256(plan)`. Record the exact request,
-  target repository, approval `{by, at, mode}`, and mode as usual. Live push
+  target repository, approval `{by, at, mode}` for writes, and mode as usual. Live push
   results contain `repository`, `branch`, `commit`, `verified_at`. PR results
   contain `repository`, `number`, `url`, `base_branch`, `head_repository`,
   `head_branch`, `head_commit`, `title`, `body`, `draft`, and `verified_at`.
   Store the PR result in both `website.pr` and the operation result. Existing
-  PRs use an approved `kind: read` operation for matching-PR verification; the
-  verified push evidence can also come from an approved read.
+  PRs use a `kind: read` GitHub operation for matching-PR verification; the verified
+  push evidence can also come from a GitHub read. Actual checks need no approval:
+  set `approval: null` and record `checked_at` with the actual RFC3339 check time.
+  Preserve the exact request, payload hash, target, and verified result. Existing
+  approved read records remain valid; simulated evidence still needs approval.
 - Completed dry-run operations are `simulated` with null remote results. Live
   operations are `succeeded`. Preserve partial receipts/history immediately;
   do not mark the step complete from an unverified or uncertain response.
 - `existing_update`, used only when the base branch already contains the correct
   entry, records `repository`, `base_branch`, `base_commit`, `version`, `file`,
   `links`, `verified_at`, `mode`, `simulated`, and `operation_id` pointing to the
-  approved read. Live verification uses actual results; a dry-run existing-entry
-  outcome must be labeled simulated. No push or PR operation is needed.
+  GitHub read recorded as above. Live verification uses actual results; a dry-run
+  existing-entry outcome must be labeled simulated. No push or PR operation is needed.
 
 Set `completed_at` only for a verified live outcome or completed simulation. Save
 the pending action and every material decision in the same per-version JSON.

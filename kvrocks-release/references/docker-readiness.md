@@ -17,8 +17,8 @@ completion time, and original transition confirmation.
 Show the manager the candidate tag, prepared commit, workflow, intended monitoring
 operations, and execution mode, then confirm entry. Record that confirmation in
 `docker.entry_confirmation`, binding it to the tag and commit. Set `step` to `3`
-and `status` to `waiting_for_docker`. This entry confirmation only authorizes
-external reads if their concrete scope was also displayed and confirmed.
+and `status` to `waiting_for_docker`. GitHub status checks need no operation
+confirmation. Registry reads retain their separate confirmation requirement.
 
 Inspect the workflow from the candidate's source locally. At authoring time it is
 `.github/workflows/nightly.yaml`, named Nightly. A `v2.**` tag push runs matrix
@@ -26,9 +26,9 @@ builds for `linux/amd64` and `linux/arm64`, then a merge job publishes the manif
 Derive required jobs and platforms from the actual candidate workflow, and save
 them; do not assume this matrix remains fixed forever.
 
-Preview and confirm a read-only discovery request scoped to `apache/kvrocks`,
-the workflow, candidate tag, prepared commit SHA, and the `push` event. For example,
-resolve these placeholders before confirmation:
+Run a read-only discovery request scoped to `apache/kvrocks`, the workflow,
+candidate tag, prepared commit SHA, and the `push` event without asking for read
+approval. For example, resolve these placeholders before execution:
 
 ```bash
 gh run list --repo apache/kvrocks --workflow nightly.yaml --branch CANDIDATE_TAG --commit PREPARED_SHA --event push --json databaseId,attempt,headBranch,headSha,event,status,conclusion,url,workflowName
@@ -37,7 +37,7 @@ gh run list --repo apache/kvrocks --workflow nightly.yaml --branch CANDIDATE_TAG
 Use an available GitHub read capability instead if appropriate. Match the exact
 repository, workflow identity/path, tag ref, commit, and event, not simply the
 newest run or a green run on `unstable`. If listing metadata does not establish
-the tag, inspect authorized run/event details rather than guess. If multiple
+the tag, inspect read-only run/event details rather than guess. If multiple
 candidate runs remain ambiguous, show them for manager selection.
 
 Save the selected run ID, URL, attempt, workflow identity, head tag, head SHA, and
@@ -45,13 +45,14 @@ event. A missing run remains `waiting_for_docker`; it does not justify triggerin
 a workflow. Report an absent/disabled workflow or access problem as a blocker
 when the available evidence establishes it.
 
-## Wait within a confirmed scope
+## Poll GitHub within a bounded scope
 
-Before polling, show the exact run, job/log reads, interval, maximum watch duration,
-and any registry reads already resolvable. A proposed default is polling every
-30 seconds for up to 30 minutes; the manager can choose another bounded window.
-Record the approval as an `external_operations` entry and its ID in
-`docker.watch_operation_id`. Reuse approval throughout the unchanged window.
+Before polling, report the exact run, job/log reads, interval, and maximum watch
+duration. Default to every 30 seconds for up to 30 minutes unless the manager
+specifies another bounded window; a one-time status request needs only one check.
+GitHub polling needs no approval. Record the read scope and observations in
+`external_operations` with `approval: null` and the check time in `checked_at`,
+and its ID in `docker.watch_operation_id`. Confirm registry reads separately.
 Keep individual waits at most 60 seconds so new user input can interrupt them.
 
 Typical read after the run and attempt are known:
@@ -66,25 +67,26 @@ Do not rely solely on `gh run view --exit-status`: a nonterminal run can still
 produce a zero exit code. Inspect the returned status and conclusion explicitly.
 
 - Queued, waiting, pending, or running: persist progress and wait again within
-  the approved window. Report meaningful changes without repeating every poll.
+  the bounded window. Report meaningful changes without repeating every poll.
 - Completed with all required jobs successful: proceed to image verification.
 - Failed, cancelled, timed out, skipped, neutral, or awaiting intervention:
   record `docker_blocked`, link the run and affected jobs, and summarize the
-  reason using approved log reads. Do not rerun or modify the workflow.
+  reason using read-only GitHub log checks. Do not rerun or modify the workflow.
 - Polling window expires or rate limits/access errors prevent reads: save the
   last observation and pending action. An elapsed watch window is not a workflow
-  failure or image readiness. Resume under valid approval or confirm a new window.
+  failure or image readiness. End the invocation; a later request can resume
+  bounded GitHub polling without read approval.
 
 Pin the run and attempt together. If someone starts a new attempt, preserve the
 previous attempt in history, verify the new attempt still matches the candidate,
-and observe it only within the approved scope. Never use success from an older
+and observe it within the bounded monitoring scope. Never use success from an older
 attempt to report a newer running attempt as ready. A changed candidate tag/SHA
 invalidates this monitor and requires a new entry confirmation.
 
 Do not create a recurring automation merely while authoring or running this skill.
 During an active monitoring invocation, use bounded waits and save progress before
 ending the turn. Background monitoring needs an explicit scheduling request and
-must preserve the confirmed read scope and notify only on meaningful changes.
+must preserve the requested scope and notify only on meaningful changes.
 
 ## Verify the image and record readiness
 

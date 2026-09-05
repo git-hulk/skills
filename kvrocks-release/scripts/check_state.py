@@ -567,9 +567,7 @@ def check_email_state(
         expected = (
             "simulated"
             if simulated
-            else "uncertain"
-            if status == "email_draft_uncertain"
-            else "succeeded"
+            else "uncertain" if status == "email_draft_uncertain" else "succeeded"
         )
         if (
             operation.get("step") != target_step
@@ -1225,10 +1223,13 @@ def check_website_operation(
         if op.get("id") == operation_id
     ]
     if operation_id is None or len(matches) != 1:
-        raise ValueError("Website outcome requires one exact approved operation")
+        raise ValueError("Website outcome requires one exact recorded operation")
     op = matches[0]
-    approved = confirmed_at(op.get("approval"), state["mode"])
     simulated = state["mode"] == "dry-run"
+    if op.get("kind") == "read" and not simulated and op.get("approval") is None:
+        operation_at = instant(op.get("checked_at"))
+    else:
+        operation_at = confirmed_at(op.get("approval"), state["mode"])
     if (
         op.get("step") != 7
         or op.get("mode") != state["mode"]
@@ -1236,14 +1237,14 @@ def check_website_operation(
         or op.get("kind") not in {"read", "write"}
         or not op.get("request")
         or op.get("inputs", {}).get("payload_sha256") != payload_hash
-        or not not_before <= approved <= current
+        or not not_before <= operation_at <= current
         or op.get("status") != ("simulated" if simulated else "succeeded")
         or (simulated and op.get("result") is not None)
     ):
         raise ValueError(
-            "Website operation must match its approved payload, destination, and mode"
+            "Website operation must match its recorded payload, destination, mode, and time"
         )
-    return op, approved
+    return op, operation_at
 
 
 def check_website_state(state, current, status=None):
@@ -1325,7 +1326,7 @@ def check_website_state(state, current, status=None):
             <= current
         ):
             raise ValueError(
-                "Already-updated completion requires approved read verification"
+                "Already-updated completion requires recorded read verification"
             )
         return vote_result
     if existing is not None:
@@ -1422,7 +1423,9 @@ def check_website_state(state, current, status=None):
         or (push["kind"] == "write" and pushed < prepared)
         or (pr_op["kind"] == "write" and approved < prepared)
     ):
-        raise ValueError("Website completion must follow push and PR approvals")
+        raise ValueError(
+            "Website completion must follow verified reads or approved writes"
+        )
     if simulated:
         return vote_result
     push_result = push.get("result")
@@ -1681,10 +1684,10 @@ def inspect_record(path, now=None):
             raise ValueError("Saved elapsed status conflicts with the current deadline")
         if state["step"] >= 2:
             check_source_transition(state, deadline_at, current)
-            reason = "Step 2 active; each external operation still needs its own confirmed preview"
+            reason = "Step 2 active; GitHub status reads need no approval; other external operations require a confirmed preview"
         if state["step"] >= 3:
             check_docker_state(state, current, require_ready=state["step"] >= 4)
-            reason = "Step 3 active; check Docker status and evidence; external polling requires confirmed scope"
+            reason = "Step 3 active; GitHub status polling needs no approval; registry reads require confirmed scope"
         if state["step"] == 4:
             if state["status"] in VERIFICATION_STATUSES:
                 check_candidate_verification(state, current)
@@ -1724,9 +1727,11 @@ def inspect_record(path, now=None):
         "state": state,
         "checked_at": current.astimezone(timezone.utc).isoformat(),
         "deadline_gate": gate,
-        "seconds_remaining": max(0, (deadline_at - current).total_seconds())
-        if deadline_at is not None
-        else None,
+        "seconds_remaining": (
+            max(0, (deadline_at - current).total_seconds())
+            if deadline_at is not None
+            else None
+        ),
         "reason": reason,
         "vote_evaluation": vote_evaluation,
     }

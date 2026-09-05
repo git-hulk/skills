@@ -31,8 +31,13 @@ Confirm any unresolved candidate inputs together:
   the existing `X.Y` branch for a patch release. Verify or create it only within
   the approved scope. Propose a separate local `codex/` working branch in an
   isolated clone when needed; do not change the user's active checkout.
-- Candidate number, a positive integer, and resulting tag `vVERSION-rcN`. Always
-  supply `-rc`; omitting it creates a final-version tag in the current helper.
+- Candidate number, a positive integer, and resulting tag `vVERSION-rcN`. If no
+  number was supplied or saved, propose **1** and show `vVERSION-rc1`. Ask the
+  release manager whether that RC number is correct as part of this candidate-plan
+  confirmation, before packaging or creating a tag. A default is a proposal, not
+  approval. Use a supplied or saved number instead of resetting it to 1; reuse
+  an explicit confirmation for the unchanged candidate. Always supply `-rc`;
+  omitting it creates a final-version tag in the current helper.
 - Explicit cherry-pick list or none, and the reviewed patch implementing any
   release exclusions. The proposal cutoff is not proof that HFE exclusions or
   subsequent agreed cherry-picks have been applied. Inspect the release diff and
@@ -43,11 +48,12 @@ Confirm any unresolved candidate inputs together:
 Preserve the proposed cutoff separately from the final prepared source commit.
 Record selected commits, exclusion patch, branch, candidate tag, and signing
 fingerprint in `source_release`. Explain changes from the approved proposal and
-obtain review for changed scope. Remote branch inspection, clone/fetch, dependency
-downloads, and any remote branch creation/push each need a concrete external
-operation preview and confirmation. Prefer an isolated local clone from available
-objects when sufficient. Confirm the exact upstream URL rather than assuming
-that a remote named `origin` belongs to Apache.
+obtain review for changed scope. GitHub branch/tag inspection needs no operation
+confirmation. Clone/fetch, dependency downloads, and any remote branch
+creation/push each need a concrete external operation preview and confirmation.
+Prefer an isolated local clone from available objects when sufficient. Confirm
+the exact upstream URL rather than assuming that a remote named `origin` belongs
+to Apache.
 
 ## Package and validate locally
 
@@ -124,8 +130,8 @@ Render an exact command with resolved values before asking for confirmation:
 git push RELEASE_REMOTE_URL refs/tags/vVERSION-rcN:refs/tags/vVERSION-rcN
 ```
 
-Inspect remote tag existence through a separately approved read, or include that
-read and post-push verification in the precise confirmation scope. If the remote
+Inspect remote tag existence before requesting push approval. GitHub tag checks
+and post-push verification require no separate read confirmation. If the remote
 tag already points to the intended object/commit, reconcile recorded evidence;
 do not push a duplicate. If it differs, stop for manager resolution. Never use
 `--tags`, force-push, push an unreviewed branch, or overwrite a candidate tag.
@@ -133,7 +139,7 @@ do not push a duplicate. If it differs, stop for manager resolution. Never use
 Save the external operation with status `prepared`, ask the manager to approve
 this exact operation, then record the approval. Step-transition approval is not
 tag-push approval. In live mode, perform only the confirmed push and verify its
-result through approved reads. In dry-run, record a simulated push without
+result through read-only GitHub checks. In dry-run, record a simulated push without
 contacting the remote or triggering CI. Leave actual remote-result fields null.
 
 Record `source_release_staged` only for a validated candidate with a verified
@@ -148,8 +154,10 @@ show its scope and obtain manager confirmation before entering it.
 
 ## Step-2 state
 
-Keep `source_release` null before entering step 2. Initialize it with the selected
-values and fill evidence only when obtained:
+Keep `source_release` null before entering step 2. Initialize it with the confirmed
+values and fill evidence only when obtained. Keep `candidate_number` and
+`candidate_tag` null until confirmed; record the proposed default and the manager's
+answer in history. An existing confirmation for the same candidate remains valid:
 
 ```json
 {

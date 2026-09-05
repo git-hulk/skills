@@ -1,6 +1,6 @@
 ---
 name: kvrocks-release
-description: Prepare and resume Apache Kvrocks releases with per-version JSON state and human confirmation. Covers proposals, source candidates, Docker readiness, uploaded artifact verification, vote and result drafts, publication, the website PR, and the final announcement. Asks for version and mode, reports and confirms the saved step before continuing, and checks resources before creation.
+description: Prepare and resume Apache Kvrocks releases with per-version JSON state and human confirmation. Covers proposals, source candidates, Docker readiness, uploaded artifact verification, vote and result drafts, publication, the website PR, and the final announcement. Confirms release execution and writes, checks GitHub status without approval, and proposes RC1 for manager confirmation.
 ---
 
 # Kvrocks Release
@@ -30,6 +30,11 @@ run. One answer covers the current run and its follow-up checkpoints; do not ask
 again at every tool call or step. Editing or testing the skill itself does not
 start a release run and does not require this opening question.
 
+A request only to inspect GitHub status does not start or resume release
+execution. Perform the requested read-only checks without the opening or
+expected-step questions; ask for a version or resource only if the target cannot
+be identified. Report the findings without advancing the release step.
+
 Validate the supplied version and record the answer in that version's JSON
 history after reading its existing state. If either answer is missing or unclear,
 keep the question pending. The only user-facing choices are **dry-run** and
@@ -39,9 +44,9 @@ This mapping never converts saved simulated evidence into actual release evidenc
 
 ## Execution mode
 
-- There is **no implicit mode**. Use the answer to the required opening question.
-  Read-only GitHub and
-  Git queries require the external-operation confirmation below. Local reads and
+- There is **no implicit mode** for release execution. Use the answer to the
+  required opening question. Read-only GitHub status checks need no operation
+  confirmation in either mode, as defined below. Local reads and
   draft/status writes are allowed. Do not create or edit a discussion, push a
   branch/tag, create a Gmail draft, send notifications, or mutate remote resources
   in dry-run. A remote email draft is an external write even though it is unsent.
@@ -55,13 +60,21 @@ This mapping never converts saved simulated evidence into actual release evidenc
 
 ## Confirm external operations
 
-Before any operation against an external resource, show the exact action,
+Read-only GitHub status and existence checks require no release-manager
+confirmation. This includes inspecting repositories, refs/commits
+(`git ls-remote` against GitHub included), files, discussions and replies, releases,
+PRs, and Actions runs/jobs/logs, plus bounded status polling and verification of
+write outcomes. Run these checks directly within the task's scope, including
+before a creation or retry. Record their evidence without inventing approval.
+
+For other operations against an external resource, show the exact action,
 destination, command/API request or content, inputs, execution mode, and expected
-effects, then obtain release-manager confirmation. This includes remote reads
-and fetches, GitHub operations, Git pushes, downloads, keyservers, SVN, and
-operations that trigger CI or registry publication. An explicit request to read
-a specific URL authorizes that read; it does not authorize further operations on
-other resources. Local inspection and skill authoring need no extra checkpoint.
+effects, then obtain release-manager confirmation. This includes non-GitHub reads,
+clone/fetch, artifact or dependency downloads, GitHub writes, Git pushes,
+keyservers, SVN, and operations that trigger CI or registry publication. A command
+that also writes or triggers a workflow is not a read-only check. An explicit
+request to read a specific URL authorizes that read; it does not authorize further
+operations on other resources. Local inspection and skill authoring need no extra checkpoint.
 
 Complete local preparation first so the manager reviews a concrete action. Save
 the preview and approval in `external_operations` as described in the record
@@ -74,15 +87,16 @@ In dry-run, confirmed external writes are simulated and recorded as such. Never
 use the underlying write command, even with its own `--dry-run` flag if it contacts
 the remote without approval. Inspect helpers for implicit operations before
 running them. If a write outcome is uncertain, record it and reconcile through
-approved reads before retrying; do not blindly repeat a possibly completed write.
+read-only checks before retrying, obtaining approval only where required above;
+do not blindly repeat a possibly completed write.
 
 ## Check resources before every creation
 
 Before creating any resource in any step, inspect both the saved JSON outcome
 and the actual target. This applies to first attempts as well as retries, even
 when the JSON has no resource ID or says the action is pending. Complete remote
-checks under the separately confirmed read scope before executing the write.
-Local existence checks need no external-operation approval.
+checks before executing the write. GitHub status/existence checks and local
+existence checks need no operation approval; confirm other remote read scopes.
 
 - Matching resource: verify its identity and contents, reconcile the saved state,
   and reuse it. Do not create a duplicate or overwrite human changes.
@@ -106,7 +120,7 @@ new attempt. Preserve previous observations in history.
 | Step/resource                                                       | Required check before creation                                                                                                                                                        |
 | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Proposal discussion                                                 | Search matching version discussions and inspect any candidate's repository, category, title, and body.                                                                                |
-| Source checkout, release branch, candidate tag, archives/signatures | Inspect local paths, Git refs/commits, artifact hashes, and approved remote branch/tag reads before packaging or pushing. Resume matching work instead of overwriting it.             |
+| Source checkout, release branch, candidate tag, archives/signatures | Inspect local paths, Git refs/commits, artifact hashes, and remote branch/tag state before packaging or pushing. GitHub ref checks need no approval. Resume matching work instead of overwriting it. |
 | Docker workflow and image                                           | Inspect the existing tag-triggered run and image; step 3 never creates or reruns them. Before step-6 promotion, inspect the source digest and both destination tags.                  |
 | Vote/result Gmail draft                                             | Search/read matching drafts in the confirmed account before the first draft creation too; compare sender, recipients, subject, body, and candidate. Preserve human edits.             |
 | Uploaded candidate verification                                     | Inspect the actual staging inventory/revision and local download workspace; verify the downloaded bytes before entering email drafting. Confirm all downloads and dependency fetches. |
@@ -114,8 +128,8 @@ new attempt. Preserve previous observations in history.
 | Website fork, branch, release entry, PR                             | Inspect existing fork/refs, release data, and matching PRs before creating or pushing anything.                                                                                       |
 | Vote and announcement handoffs                                      | Read saved answers and completion first; do not repeat completed handoffs. Do not reintroduce vote-thread/PMC checks or automatic email sending.                                      |
 
-Dry-run rehearses the same decision using approved reads or explicitly authorized
-simulated evidence. Label simulations and leave real creation results null.
+Dry-run rehearses the same decision using reads permitted above or explicitly
+authorized simulated evidence. Label simulations and leave real creation results null.
 
 ## Resume before acting
 
@@ -133,9 +147,9 @@ simulated evidence. Label simulations and leave real creation results null.
    preserve any existing draft, and leave unknown inputs and approvals null.
    Record the opening answer and initialization in history. Do not require remote
    reads or an expected-step answer just to create this local record. Report the
-   initialized status and proceed to proposal preparation and the concrete remote
-   read checkpoint. Local initialization does not prove that remote resources are
-   absent; inspect and reconcile those under approved reads before remote creation.
+   initialized status and proceed to proposal preparation and GitHub checks without
+   a read checkpoint. Local initialization does not prove that remote resources are
+   absent; inspect and reconcile those before remote creation.
 2. Run the read-only helper on the existing or newly initialized record:
 
    ```bash
@@ -209,8 +223,9 @@ Do not invent a current step.
 Ask: **"The saved release is at step N — STEP_NAME, with status STATUS. Is this
 the expected step to continue from?"** Substitute the actual values, or adapt
 the question to an invalid existing record. Wait for an explicit answer before
-release preparation, external lookups, resource creation, or step advancement.
-Local state inspection and recording the checkpoint are allowed while waiting.
+release preparation, resource creation, or step advancement. Local state inspection,
+recording the checkpoint, and read-only GitHub checks are allowed while waiting;
+other external lookups retain their operation-confirmation requirement.
 
 Record the displayed snapshot and manager's answer in JSON history as described
 in the record reference. If it is unexpected, ask what the manager expected and
@@ -235,8 +250,8 @@ a proposal in **General** with a version, commit cutoff, exclusions, and an exac
 cherry-pick deadline. Do not inherit its version, commit, excluded feature, or
 dates. Use the template in [the record reference](references/release-record.md).
 
-1. After confirming the remote lookup under the external-operation rule, resolve
-   the default proposed release commit from the current **upstream**
+1. Resolve the default proposed release commit without an operation-confirmation
+   prompt from the current **upstream**
    `apache/kvrocks` `unstable` branch, using a read-only GitHub API or:
 
    ```bash
@@ -369,6 +384,10 @@ Keep these results and the pending action in the per-version release record.
 Read [the source-release procedure](references/source-release.md) before starting
 step 2 or resuming its work. It covers release-branch preparation, source
 packaging/signing, validation, and a separately confirmed candidate-tag push.
+For a new candidate with no supplied or saved RC number, propose **RC1** and ask
+the release manager to confirm the number and resulting `vVERSION-rc1` tag before
+packaging. Preserve an already confirmed RC number on resume; see the procedure
+for changes and retries.
 First complete the preceding deadline, objection-review, and transition
 confirmation checkpoint; set `next_step_confirmation.target_step` to `2`.
 Defining this procedure or preparing the skill cannot bypass that checkpoint.
@@ -382,14 +401,15 @@ manager's instructions and confirmation before a later release step.
 Follow [the Docker readiness procedure](references/docker-readiness.md). This
 step observes the workflow already triggered by the approved candidate-tag push;
 it does not manually build/push images or start/rerun workflows. After step 2
-finishes, confirm entry to step 3 and the concrete external read operations.
+finishes, confirm entry to step 3. GitHub status reads need no operation
+confirmation; registry reads follow the external-operation rule.
 Keep the original step-2 transition approval intact and record this confirmation
 in `docker.entry_confirmation`.
 
 Wait for the matching candidate's workflow and required jobs to succeed, then
 verify the published image reference, digest, and platforms. Persist run identity,
 attempt, progress, image evidence, and the next action in `release-state.json`.
-Use bounded polling under one confirmed scope instead of asking on every poll.
+Use bounded GitHub polling without asking for read approval.
 Failure, cancellation, a missing run, or an unavailable image must not be reported
 as ready. Stop after readiness and obtain confirmation before the next release step.
 

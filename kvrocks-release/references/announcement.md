@@ -30,7 +30,8 @@ Replace VERSION and show the concrete final release-note and download links from
 the saved release evidence. This text is an instruction to the manager, not an
 email draft. Use links already verified in the earlier steps; if their status is
 uncertain, explain it and resolve the specific issue before requesting a send.
-Any new external verification still requires its concrete approved read scope.
+New GitHub status checks need no approval; other external verification still
+requires its concrete approved read scope under `SKILL.md`.
 
 Do not send an email, create a Gmail draft, or contact anyone else as part of this
 handoff. If the manager asks for help drafting, first confirm the exact From

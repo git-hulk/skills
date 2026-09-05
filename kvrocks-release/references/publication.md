@@ -2,8 +2,9 @@
 
 Follow the official [SVN publication](https://kvrocks.apache.org/community/create-a-release/#publish-artifacts-to-svn-release-branch)
 and [Docker publication](https://kvrocks.apache.org/community/create-a-release/#publish-docker-images)
-sections. All external reads and writes use the concrete preview and confirmation
-rule in `SKILL.md`. Authoring this procedure never advances an active release.
+sections. External operations follow `SKILL.md`: GitHub status checks need no
+approval; SVN and registry reads and writes retain their concrete confirmation
+requirements. Authoring this procedure never advances an active release.
 
 ## Entry and preparation
 

@@ -40,8 +40,9 @@ leave unknown evidence and approvals null, and record initialization and the
 opening answer in history. Report step 1, `awaiting_confirmation`, and proceed.
 An unreadable, malformed, or incompatible file is not a missing file.
 
-Check actual remote resources under separately approved reads before creating
-anything remotely; an empty local record never establishes remote absence. If
+Check actual remote resources before creating anything remotely. GitHub status
+and existence checks need no confirmation; other reads follow `SKILL.md`.
+An empty local record never establishes remote absence. If
 existing remote work is found, reconcile it and confirm the recovered step before
 advancing. Do not restore a stale rehearsal's approvals as live evidence.
 
@@ -220,7 +221,7 @@ Step 2 uses these statuses with `step: 2`, retaining the step-1 evidence:
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | `preparing_source_release`      | Prepare the confirmed candidate in an isolated checkout; persist each completed local action.                                          |
 | `source_release_validated`      | Actual local artifact checks passed; prepare the exact tag-push preview.                                                               |
-| `tag_push_uncertain`            | A tag push failed or its result is unclear; reconcile through approved remote reads before retrying.                                   |
+| `tag_push_uncertain`            | A tag push failed or its result is unclear; reconcile through read-only GitHub checks without read approval before retrying.             |
 | `source_release_staged`         | A live candidate passed validation and its remote tag was verified; stop for the next instruction.                                     |
 | `dry_run_source_release_staged` | External-operation checkpoints were rehearsed without a real push; distinguish actual local validation from simulated checks and stop. |
 
@@ -232,13 +233,14 @@ Step 3 uses `step: 3` and retains completed source-staging evidence:
 
 | Status                 | Meaning / permitted next action                                                                                                                             |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `waiting_for_docker`   | The matching workflow or image is not ready; continue reads within the approved watch window or save a pending action.                                      |
+| `waiting_for_docker`   | The workflow or image is not ready; continue bounded GitHub polling without read approval, confirm registry reads, or save a pending action.                 |
 | `docker_blocked`       | Workflow failure, cancellation, required intervention, access failure, or conflicting image evidence requires review. Never rerun or publish automatically. |
 | `docker_ready`         | The candidate workflow and all required jobs succeeded; the published registry digest and expected platforms were verified.                                 |
 | `dry_run_docker_ready` | Authorized fixtures passed the readiness checks; no real image publication is implied.                                                                      |
 
 Persist run ID and attempt, statuses, job outcomes, image reference/digest,
-platforms, check/completion times, and polling approval in JSON. On a new attempt,
+platforms, check/completion times, and bounded polling scope in JSON. GitHub reads
+need no approval; retain approval for registry reads. On a new attempt,
 preserve prior evidence in history and clear the previous publication/image
 observations and completion time before monitoring it. Expiration of a watch
 window alone does not mean failure or readiness.
@@ -322,10 +324,10 @@ Step 7 uses `step: 7` after completed publication and GitHub release notes:
 | `awaiting_website_pr_review`  | Show the full diff, validation, branch destinations, and PR title/body for concrete operation approval.  |
 | `website_pr_blocked`          | Resolve missing or conflicting release links, failed checks, or unavailable repository access.           |
 | `website_push_uncertain`      | Reconcile the website branch's remote SHA before retrying a push.                                        |
-| `website_pr_uncertain`        | Search and inspect matching PRs under approved reads before repeating creation.                          |
+| `website_pr_uncertain`        | Search and inspect matching PRs on GitHub without read approval before repeating creation.              |
 | `website_pr_created`          | The matching live PR and branch were verified; stop for human review. No merge or deployment is implied. |
 | `dry_run_website_pr_prepared` | Approved website patch, push, and PR creation were rehearsed locally; no real PR URL.                    |
-| `website_already_updated`     | Approved verification found this release already correctly listed on the base branch; avoid an empty PR. |
+| `website_already_updated`     | Read-only verification found this release already correctly listed on the base branch; avoid an empty PR. |
 
 See [the website PR procedure](website-pr.md) for the schema and payload hashes.
 Record pushes and PR creation separately so a successful push is preserved if PR
@@ -364,7 +366,8 @@ manager's decision in `history`. An elapsed deadline alone never permits advance
 
 ## External-operation records
 
-Append a concrete record before requesting approval, using a unique `id`:
+Append a concrete record before execution (and before requesting approval when
+required), using a unique `id`:
 
 ```json
 {
@@ -397,23 +400,33 @@ owning step object for local resources). Include `target`, identifying `inputs`,
 (`absent`, `matching`, `conflicting`, or `unverified`), `resource_ids`, and a
 `summary` of compared identity/content. A matching result calls for verified reuse;
 only verified absence permits proposing creation. Conflicting/unverified results
-block creation. Remote checks require approved reads, and simulated checks never
-establish live absence. Prior step-specific evidence can supply this check without
+block creation. GitHub status/existence checks need no approval; confirm other
+remote reads as required by `SKILL.md`. Simulated checks never establish live
+absence. Prior step-specific evidence can supply this check without
 duplicating a read when its scope is unchanged and it is still current.
 Older completed operations need no fabricated historical checks; inspect their
 actual resources on resume before any further creation or retry.
 
-After confirmation, set `approval` to `{by, at, mode}` with actual values and
-`status` to `approved`. Record actual outcomes as `succeeded`, `failed`, or
-`uncertain`; confirmed dry-run writes become `simulated` with actual remote
-results left null. A remote read may actually succeed in dry-run when its scope
-was explicitly approved. Keep prior records immutable after an outcome; create
-a new preview and approval when scope changes. Reconcile uncertain outcomes
-before retrying. Persist every material update in `history` too.
+For actual read-only GitHub checks, use `kind: read`, leave `approval: null`,
+record the actual check time in `checked_at` (RFC3339), and retain the exact
+request, target, identifying inputs, and result. Record outcomes as `succeeded`,
+`failed`, or `uncertain`. Do not invent manager approval. These reads may run in
+either mode; actual results in dry-run remain observations, not simulated writes
+or release authorization. A status-only request needs no release record or mode
+initialization. Simulated evidence still requires explicit authorization. Older
+read records with genuine approval remain valid.
 
-An operation record or step-level confirmation alone never grants permission:
-the manager must have confirmed the exact preview in the conversation. Carry
-valid unchanged approvals across resumptions without asking twice.
+For operations requiring confirmation, set `approval` to `{by, at, mode}` afterward
+and `status` to `approved`. Record actual outcomes as `succeeded`, `failed`, or
+`uncertain`; confirmed dry-run writes become `simulated` with actual remote
+results left null. A non-GitHub remote read may actually succeed in dry-run when
+its scope was explicitly approved. Keep prior records immutable after an outcome;
+create a new record when scope changes and obtain approval where required.
+Reconcile uncertain outcomes before retrying. Persist every material update in `history` too.
+
+For operations requiring approval, an operation record or step-level confirmation
+alone never grants permission: the manager must have confirmed the exact preview
+in the conversation. Carry valid unchanged approvals across resumptions without asking twice.
 
 ## Legacy Markdown records
 
@@ -500,7 +513,8 @@ For step 5, inspect `vote_evaluation`: it validates the independent vote clock a
 the manager's post-deadline answer. It never determines the outcome by tallying
 votes. Exit `0` still does not imply that the vote has passed.
 The helper never queries GHA, the registry, or Gmail and does not
-approve external operations; the agent must perform the confirmed checks.
+approve external operations; the agent must perform the actual checks and obtain
+confirmation where required by `SKILL.md`.
 For step 6 it also checks the prior vote/result gate, publication entry, plan and
 operation bindings, saved SVN/Docker outcomes, and manual GitHub confirmation.
 It cannot prove remote publication from JSON alone. Exit `0` still indicates
