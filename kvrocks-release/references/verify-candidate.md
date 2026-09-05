@@ -158,6 +158,12 @@ evidence}`; evidence identifies the actual log/review findings, and may be exten
 with exit code, environment, reviewer, fingerprints, or other supporting details.
 Live success is `passed`; rehearsal success is `simulated_pass`.
 
+Also record `local_artifacts` as `{path, kind}` entries with absolute paths for
+downloaded artifacts and disposable extraction/build output as they are created.
+Keep log paths separately in check evidence. These paths support the
+[optional cleanup offer after completion](local-cleanup.md); recording a path
+does not authorize its deletion.
+
 `read_operation_ids` references the approved completed batch that downloaded the
 candidate and KEYS (or simulated it). Its `step` is 4, `kind` is `read`, and
 `inputs` contains exactly `{source_url, source_revision, keys_url}`; the operation

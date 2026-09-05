@@ -13,7 +13,8 @@ workflow and verifies image readiness, (4a) Verify the uploaded release candidat
 (5) Wait for voting and draft the vote result, (6) Publish SVN artifacts and
 Docker images, then ask the manager to publish GitHub release notes, and
 (7) Create a PR to update website release links, and (8) Ask the release manager
-to send the announcement, then finish the process.
+to send the announcement, then finish the process. After completion, offer to
+remove this release's local artifacts only after approval of the exact paths.
 Adding instructions does not enter or approve a step for an active release.
 Initial SVN artifact uploads, automatic mail sending, and old-release cleanup
 remain outside the defined steps. The manager sends the final announcement.
@@ -158,7 +159,8 @@ simulated evidence. Label simulations and leave real creation results null.
    For step 7, use [the website PR procedure](references/website-pr.md).
    For step 8, use [the final announcement handoff](references/announcement.md).
    If the validated status is `release_complete` or `dry_run_release_complete`,
-   report the recorded completion and end this invocation. Do not repeat the
+   report the recorded completion and follow [the local cleanup offer](references/local-cleanup.md)
+   if no cleanup decision is recorded, or resume a pending offer. Do not repeat the
    announcement handoff, reopen earlier steps, or start additional release work.
    Preserve the saved step/status; do not apply the step-1 transitions below.
 
@@ -207,8 +209,9 @@ Reuse this checkpoint answer within the current run while the displayed state
 is unchanged. If reconciliation changes the step or status, show the correction
 and confirm it before proceeding. Earlier proposal, transition, and operation
 approvals remain intact when their scope is unchanged. For a terminal record,
-report step 8 and the recorded completion, confirm that this is expected, and
-stop; confirmation does not restart the completed process. Skill authoring or
+report step 8 and the recorded completion, confirm that this is expected, then
+handle only the optional local cleanup offer if unresolved. Confirmation does
+not approve deletion or restart the completed process. Skill authoring or
 isolated tests do not invoke this live workflow checkpoint.
 
 ## Step 1: prepare the discussion
@@ -464,3 +467,6 @@ report is sufficient; do not inspect their mailbox or require an archive URL.
 Then save `release_complete` and the completion time in JSON. In dry-run, ask
 only for acknowledgment of the simulated handoff, keep actual sending evidence
 null, and finish with `dry_run_release_complete`. This is the last step.
+After recording completion, [offer local artifact cleanup](references/local-cleanup.md).
+Show the exact paths and obtain separate approval before removal; retain the
+release state and logs. Cleanup is optional and does not reopen the release.

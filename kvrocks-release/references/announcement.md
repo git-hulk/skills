@@ -42,7 +42,7 @@ For dry-run, explicitly replace the live request with a **simulated announcement
 handoff** showing the same recipients and sender requirement. Ask the manager to
 acknowledge the rehearsal only; do not ask them to send a real announcement.
 
-## Record completion and stop
+## Record completion and offer local cleanup
 
 Save the complete handoff and `awaiting_announcement_sent`. Asking, preparing a
 draft, silence, or an unclear answer does not mean sent. The manager's explicit
@@ -54,9 +54,13 @@ manager-reported. In dry-run, accept an explicit rehearsal acknowledgment only.
 After that confirmation, set `release_complete` in live mode or
 `dry_run_release_complete` in dry-run, record `announcement.completed_at`, clear
 `next_action` to null, and append the terminal decision to history. The requested
-process is done. Report completion in the recorded mode and stop. On later
-invocations, validate and report the terminal state without repeating any handoff
-or adding cleanup, merge/deployment, announcement monitoring, or other steps.
+process is done. Report completion in the recorded mode, then follow
+[the optional local artifact cleanup offer](local-cleanup.md): inspect and show
+the exact removal list and ask the manager before deleting anything. Keep the
+release terminal while cleanup is pending or declined. Dry-run simulates removal.
+On later invocations, validate and report the terminal state and saved cleanup
+outcome without repeating the announcement or a completed/declined cleanup offer.
+Do not add merge/deployment, announcement monitoring, or other release steps.
 
 ## JSON state
 

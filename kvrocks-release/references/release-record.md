@@ -64,6 +64,7 @@ status file.
   "publication": null,
   "website": null,
   "announcement": null,
+  "local_cleanup": null,
   "external_operations": [],
   "history": [],
   "notes": [],
@@ -323,8 +324,13 @@ Step 8 is the final step and uses `step: 8` after completed website work:
 An announcement request or draft alone is not completion. Store the manager's
 answer, mode, time, and handoff hash; an archive URL and exact send time are
 optional. Set `announcement.completed_at` and `next_action: null` only at terminal
-completion. On resumption, validate and report the completed mode without
-repeating announcements or adding later steps.
+completion. After completion, prepare [the optional local artifact cleanup
+offer](local-cleanup.md). Record `local_cleanup` separately without changing the
+terminal step/status or `next_action`. Keep it null before the offer; save the
+exact path plan, approval, and per-path outcomes afterward. Older records missing
+this field have no saved cleanup decision; do not infer consent. On resumption,
+validate and report the completed mode and saved cleanup outcome without repeating
+announcements, declined/completed cleanup offers, or adding later release steps.
 
 Changes before discussion publication reset approval and status to `awaiting_confirmation`.
 Log any previously simulated outcome and clear its active `simulated_at` when
