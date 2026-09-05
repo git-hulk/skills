@@ -127,27 +127,36 @@ simulated evidence. Label simulations and leave real creation results null.
    a second `state.json` with competing status.
    If only a legacy Markdown record exists, migrate it as described in the
    reference before continuing; never maintain status in Markdown.
-2. For an existing record, run the read-only helper from this skill directory:
+   If neither JSON nor legacy state exists, this is a normal start: **create the
+   initial local JSON automatically without asking**, using the already confirmed
+   version and mode and the record template. Set step 1 and `awaiting_confirmation`,
+   preserve any existing draft, and leave unknown inputs and approvals null.
+   Record the opening answer and initialization in history. Do not require remote
+   reads or an expected-step answer just to create this local record. Report the
+   initialized status and proceed to proposal preparation and the concrete remote
+   read checkpoint. Local initialization does not prove that remote resources are
+   absent; inspect and reconcile those under approved reads before remote creation.
+2. Run the read-only helper on the existing or newly initialized record:
 
    ```bash
    python3 scripts/check_state.py ~/.kvrocks/release-VERSION/release-state.json
    ```
 
-   Before continuing, follow the **expected-step checkpoint** below. Report the
+   For a record that existed before this run, follow the **expected-step checkpoint** below. Report the
    saved mode, status, cutoff commit, and deadline. Preserve the draft,
-   decisions, and history. Missing, malformed, or incompatible state must be
-   resolved before advancing; do not silently reset it or create a duplicate.
+   decisions, and history. Malformed, unreadable, or incompatible existing state
+   must be resolved before advancing; do not treat it as absent or overwrite it.
+   A missing file is handled by automatic initialization above, not as an error.
    **In release mode, this state check is mandatory before any release action.**
    Confirm the saved step, pending action, approvals, deadlines, and external
    outcomes; continue from that status rather than restarting at step 1. Resolve
    a requested/saved mode mismatch before proceeding. A dry-run record cannot
    authorize release-mode work; preserve its history and use the existing explicit
    mode-transition procedure. A dry-run inspection of live state remains read-only.
-   If no JSON exists, report that there is no saved status, check for legacy state
-   locally and confirm this uninitialized status at the expected-step checkpoint.
-   Then check existing release resources under approved reads and reconcile any found
-   work before initializing a genuinely new step-1 record. Never assume a missing
-   local file means the release resources do not exist.
+   If remote reconciliation finds an existing release, preserve and incorporate
+   verified evidence, then show and confirm the recovered step before continuing.
+   Never fabricate earlier approvals or assume a missing local file means that
+   release resources do not exist.
    For saved step-2 state, resume via [the source-release procedure](references/source-release.md).
    For step 3, use [the Docker readiness procedure](references/docker-readiness.md).
    For step 4 verification statuses, use [the uploaded candidate verification procedure](references/verify-candidate.md).
@@ -179,7 +188,12 @@ simulated evidence. Label simulations and leave real creation results null.
 
 ## Expected-step checkpoint on loading
 
-After the opening version/mode answer, read the selected version's local state
+This checkpoint applies to an existing or recovered release record. When state
+was missing and has just been initialized in this run, report step 1 and continue
+without asking whether the missing state or new step is expected. Do not replace
+that removed question with a confirmation to initialize the local file.
+
+After the opening version/mode answer, read the selected version's existing state
 and run its checker. **Tell the release manager where the workflow currently
 stands and ask whether that is expected before continuing.** This applies to
 both dry-run and release mode on each new execution/resumption. A version/mode
@@ -188,21 +202,21 @@ answer alone does not confirm the saved step.
 Show the version, selected and saved mode if different, state-file path, saved
 step number and name, exact status, pending action, and any unmet deadline,
 approval, or known blocker. For step 1, include the saved discussion title and
-full body inline, consistent with the proposal confirmation rule. If the record
-is missing, say "No saved step; initialization is pending"; if invalid, say the
-step is unverified and show the validation error. Do not invent a current step.
+full body inline, consistent with the proposal confirmation rule. If an existing
+record is invalid, say the step is unverified and show the validation error.
+Do not invent a current step.
 
 Ask: **"The saved release is at step N — STEP_NAME, with status STATUS. Is this
 the expected step to continue from?"** Substitute the actual values, or adapt
-the question to a missing/invalid record. Wait for an explicit answer before
+the question to an invalid existing record. Wait for an explicit answer before
 release preparation, external lookups, resource creation, or step advancement.
 Local state inspection and recording the checkpoint are allowed while waiting.
 
 Record the displayed snapshot and manager's answer in JSON history as described
 in the record reference. If it is unexpected, ask what the manager expected and
 reconcile the state and resource evidence under the existing read-approval rules.
-Do not reset, rewind, or skip steps merely to match an expected position. Missing
-or invalid records still need reconciliation; a positive answer cannot validate
+Do not reset, rewind, or skip steps merely to match an expected position. Invalid
+records and discovered remote work still need reconciliation; a positive answer cannot validate
 bad evidence, bypass a deadline, approve a transition, or authorize external writes.
 
 Reuse this checkpoint answer within the current run while the displayed state

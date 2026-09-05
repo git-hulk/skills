@@ -30,6 +30,21 @@ for both version and mode (`dry-run` or `release`). Keep this filename as the
 single authoritative state; a reference to "state.json" does not create a second
 status file.
 
+Missing local state is normal. After version and mode are confirmed, check for
+JSON and legacy state. If both are absent, create the initial directory and JSON
+from the template automatically, without an initialization or expected-step
+question and without waiting for remote checks. Use exclusive creation or an
+atomic no-overwrite operation; reread if another process creates the file first.
+Preserve any existing draft or other files. Record known inputs from this run,
+leave unknown evidence and approvals null, and record initialization and the
+opening answer in history. Report step 1, `awaiting_confirmation`, and proceed.
+An unreadable, malformed, or incompatible file is not a missing file.
+
+Check actual remote resources under separately approved reads before creating
+anything remotely; an empty local record never establishes remote absence. If
+existing remote work is found, reconcile it and confirm the recovered step before
+advancing. Do not restore a stale rehearsal's approvals as live evidence.
+
 ```json
 {
   "schema_version": 1,
@@ -79,8 +94,10 @@ Field meanings:
   for the current invocation to publish anything. The user-facing choice
   `release` maps to stored `live`. Ask version/mode at the beginning of each run,
   record the answer in history, and validate saved status before proceeding.
-  Then display the saved step/name, status, pending action, mode, and blockers
-  and ask whether the manager expects to continue from there. This confirmation
+  For pre-existing or recovered state, display the saved step/name, status,
+  pending action, mode, and blockers and ask whether the manager expects to
+  continue from there. Skip that question for a just-initialized missing record.
+  This confirmation
   is separate from mode selection and never approves a remote operation.
   Never infer a release-mode selection from an existing live record. Resolve
   mode mismatches without automatically changing prior evidence or approvals.
@@ -179,10 +196,12 @@ Field meanings:
   awaiting an answer, then true or false only from the manager's explicit answer).
   Preserve the pending event and append the answered event with `question_at`
   pointing to its timestamp. Include the manager's correction in `details` when
-  unexpected. Record unknown step/status as null for missing or invalid state;
+  unexpected. Record unknown step/status as null for invalid existing state;
   never overwrite an unreadable record merely to log the checkpoint. Resolve it
   first, then preserve the conversation's checkpoint history in the repaired JSON.
   An earlier run's answer does not replace the new loading checkpoint.
+  Automatic initialization gets an initialization event, not an `expected_step`
+  event with an invented answer. It does not approve the proposal or external work.
 - All non-null timestamps include a timezone; set `updated_at` on every save.
 
 Statuses and transitions:
@@ -463,8 +482,10 @@ python3 scripts/check_state.py ~/.kvrocks/release-VERSION/release-state.json
 
 This helper only reads the record and the current clock; it never writes files,
 contacts GitHub, or authorizes a later step. Exit codes: `0` means the time gate
-elapsed, `1` means waiting or unresolved input, and `2` means missing or invalid
-state. Exit `0` does not check community feedback or authorize a transition:
+elapsed, `1` means waiting or unresolved input, and `2` means unreadable or invalid
+state (including a nonexistent path passed directly to this read-only helper).
+Initialize absent state before invoking it; the checker does not create files.
+Exit `0` does not check community feedback or authorize a transition:
 the agent must actually complete the objection review and manager confirmation
 checkpoint. For step-2 records the helper also checks the saved transition
 evidence. For step 3 it checks source-staging/entry evidence and consistency of
