@@ -1,0 +1,29 @@
+{
+  "skill_name": "wise-coding",
+  "evals": [
+    {
+      "id": 0,
+      "name": "sql-service-api-miniflux-mute-feed",
+      "prompt": "In the miniflux repo at __REPOS__/miniflux, add a way to mute a feed until a given time. While a feed is muted the background refresh should skip it, and API clients need to be able to set and clear the mute through the existing feed update endpoint and see it in the feed response. Follow how the codebase already does things. I'm not around to answer questions, so make sensible assumptions and write them down.",
+      "expected_output": "A migration appended to the migrations list adding a nullable column with a default that leaves existing feeds unmuted; a model field following existing tag conventions; a storage change in the feed store; the scheduler/refresh path skipping muted feeds; the existing feed update handler accepting and returning the field; a small number of behavior tests; a summary listing assumptions, concepts, exported surface, and tests.",
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 1,
+      "name": "kv-store-api-kvrocks-controller-readonly-cluster",
+      "prompt": "Add a read-only mode to clusters in __REPOS__/kvrocks-controller: an operator can mark a cluster read-only via the HTTP API, it must survive controller restarts, and while it is set, slot migrations and failovers for that cluster must be rejected with a clear error. Follow how the codebase already does things. I can't reply to questions, so list your assumptions.",
+      "expected_output": "A flag persisted on the cluster object in the store (surviving restarts via the existing engine), an API change on the existing cluster resource or a sibling-style endpoint, guards in the migration and failover paths returning an existing-style error, a few behavior tests, and a summary listing assumptions, concepts, exported surface, and tests.",
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 2,
+      "name": "library-no-schema-clickhouse-parser-exchange-tables",
+      "prompt": "the parser at __REPOS__/clickhouse-sql-parser doesn't handle `EXCHANGE TABLES db1.t1 AND db2.t2 [ON CLUSTER x]` (and the `EXCHANGE DICTIONARIES` variant). add it so Parse and the formatter round-trip it. keep the public surface as small as the existing statements do. no need to ask me anything, just note your assumptions.",
+      "expected_output": "A new AST node mirroring the most similar existing statement, a parse function and formatter case wired the same way as siblings, a testdata golden case in the repo's convention, no unrelated exports, and a summary stating that storage and API layers do not apply.",
+      "files": [],
+      "assertions": []
+    }
+  ]
+}

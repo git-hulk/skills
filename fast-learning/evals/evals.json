@@ -1,0 +1,89 @@
+{
+  "skill_name": "fast-learning",
+  "evals": [
+    {
+      "id": 0,
+      "name": "service-kv-store-kvrocks-controller",
+      "prompt": "I just joined the team that maintains apache/kvrocks-controller and I've never read it. The repo is checked out at __REPOS__/kvrocks-controller. Help me learn this codebase from scratch: the key concepts and how they relate, the architecture, the main data flows, how it stores its state, the API surface, and whether the API is well designed. I can't answer questions right now, so write everything down for me to read later.",
+      "expected_output": "A markdown report with a glossary of project concepts cited to code/docs, a Mermaid concept-relationship map, a Mermaid architecture diagram, several Mermaid sequence diagrams for critical flows, a key-layout schema for the etcd/consul/zookeeper store, an API table, an orthogonality analysis with evidence, and a grill question tree with recommended answers.",
+      "files": [],
+      "assertions": [
+        "Report file report.md exists and is substantial (>= 8k chars)",
+        "Glossary table with >= 10 concept rows",
+        "At least 80% of glossary rows carry a file:line or URL citation",
+        "Mermaid concept-relationship flowchart with labelled edges (>= 5 labels)",
+        ">= 30 distinct file:line citations that resolve to real files in the repo",
+        "No more than 10% of file:line citations point to non-existent files",
+        "External documentation URL referenced (README-linked doc site was consulted)",
+        "Orthogonality analysis section with a scoring table and the concept of orthogonality",
+        "Orthogonality findings cite code locations (>= 3 file:line in that section)",
+        "Grill / question section with >= 8 questions and recommended answers",
+        "States that the repo kind was classified (service / library) before analysis",
+        "Architecture flowchart with at least one subgraph (process boundary)",
+        ">= 3 sequenceDiagram blocks for critical data flows",
+        "Each data flow states what breaks if a step is skipped (>= 3 'break' statements)",
+        "API table with >= 15 endpoint rows",
+        "Key APIs described with request/response shape and error semantics",
+        "Schema presented as key-layout table (key prefixes) for the etcd/consul/zk store",
+        "Consistency mechanism of the store named (txn / cas / lease / election / watch)",
+        "Core concepts Namespace, Cluster, Shard, Node, Slot all defined in glossary",
+        "Explains controller leader election / failover as a flow"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "service-sql-miniflux",
+      "prompt": "walk me through the miniflux repo at __REPOS__/miniflux, i want the full picture: concepts, architecture, data flow, db schema, and the apis. I'm going to be on a plane so just produce the write-up, don't wait for me to reply.",
+      "expected_output": "A markdown report with glossary, concept map, architecture diagram, 3-5 sequence diagrams, an erDiagram derived from the SQL migrations with analysis, an API table covering the REST/Fever/Google Reader surfaces, an orthogonality analysis, and a written grill question tree.",
+      "files": [],
+      "assertions": [
+        "Report file report.md exists and is substantial (>= 8k chars)",
+        "Glossary table with >= 10 concept rows",
+        "At least 80% of glossary rows carry a file:line or URL citation",
+        "Mermaid concept-relationship flowchart with labelled edges (>= 5 labels)",
+        ">= 30 distinct file:line citations that resolve to real files in the repo",
+        "No more than 10% of file:line citations point to non-existent files",
+        "External documentation URL referenced (README-linked doc site was consulted)",
+        "Orthogonality analysis section with a scoring table and the concept of orthogonality",
+        "Orthogonality findings cite code locations (>= 3 file:line in that section)",
+        "Grill / question section with >= 8 questions and recommended answers",
+        "States that the repo kind was classified (service / library) before analysis",
+        "Architecture flowchart with at least one subgraph (process boundary)",
+        ">= 3 sequenceDiagram blocks for critical data flows",
+        "Each data flow states what breaks if a step is skipped (>= 3 'break' statements)",
+        "API table with >= 15 endpoint rows",
+        "Key APIs described with request/response shape and error semantics",
+        "erDiagram derived from SQL migrations with >= 5 entities",
+        "Schema analysis discusses indexes and/or denormalisation against query patterns",
+        "Covers the REST API plus Fever and Google Reader compatibility APIs",
+        "Core concepts Feed, Entry, Category, Enclosure, User in glossary"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "library-hashicorp-raft",
+      "prompt": "I need to embed hashicorp/raft in a Go service and I don't understand the library yet. It's cloned at __REPOS__/raft. Teach me the codebase: what the core concepts mean and how they fit together, what the public interfaces are and which ones I have to implement myself, how its internals flow, and whether the interfaces are orthogonal. No one is around to answer questions, so leave the write-up for me.",
+      "expected_output": "A markdown report with glossary, concept map, a classDiagram interface map that separates caller-implemented interfaces from library-provided ones, a usage narrative, an internal flow / state diagram, an interface orthogonality analysis, and a written grill question tree.",
+      "files": [],
+      "assertions": [
+        "Report file report.md exists and is substantial (>= 8k chars)",
+        "Glossary table with >= 10 concept rows",
+        "At least 80% of glossary rows carry a file:line or URL citation",
+        "Mermaid concept-relationship flowchart with labelled edges (>= 5 labels)",
+        ">= 30 distinct file:line citations that resolve to real files in the repo",
+        "No more than 10% of file:line citations point to non-existent files",
+        "External documentation URL referenced (README-linked doc site was consulted)",
+        "Orthogonality analysis section with a scoring table and the concept of orthogonality",
+        "Orthogonality findings cite code locations (>= 3 file:line in that section)",
+        "Grill / question section with >= 8 questions and recommended answers",
+        "States that the repo kind was classified (service / library) before analysis",
+        "classDiagram interface map present",
+        "Interface table distinguishes caller-implemented vs library-provided",
+        "All caller-facing interfaces named: FSM, LogStore, StableStore, SnapshotStore, Transport",
+        "Usage narrative: Go code block calling raft.NewRaft",
+        "Internal flow diagram: stateDiagram or sequenceDiagram covering Follower/Candidate/Leader",
+        "Names the interface split (LogStore vs StableStore vs SnapshotStore) in the orthogonality discussion"
+      ]
+    }
+  ]
+}
