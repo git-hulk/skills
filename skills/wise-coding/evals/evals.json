@@ -24,6 +24,20 @@
       "expected_output": "A new AST node mirroring the most similar existing statement, a parse function and formatter case wired the same way as siblings, a testdata golden case in the repo's convention, no unrelated exports, and a summary stating that storage and API layers do not apply.",
       "files": [],
       "assertions": []
+    },
+    {
+      "id": 3,
+      "name": "name-grouped-values-by-their-role",
+      "prompt": "In a Go proxy package, a private helper named route returns a destination address, protocol, timeout, retry policy, and error. The package documentation calls this combination a route. Its callers forward requests using those values. Refactor the signature to group the four non-error values into a struct. Show the proposed type, helper signature, and one caller; implementation bodies are not needed. The package also contains HealthCheckResult, which represents the outcome of a completed health check.",
+      "expected_output": "A private type named for the route concept, an action-named helper, and a caller whose variable and field names explain how the route is used. The error stays separate. The unrelated HealthCheckResult is preserved; suffixes are judged by meaning rather than banned.",
+      "files": [],
+      "assertions": [
+        "The grouped type uses the existing route concept instead of a mechanically derived result or data wrapper name",
+        "The helper name describes its action and is considered together with the type name to avoid a name collision",
+        "The caller variable and field access communicate the value role",
+        "The type remains private and error remains a separate return value",
+        "The response does not rename HealthCheckResult or prohibit meaningful Result suffixes"
+      ]
     }
   ]
 }
