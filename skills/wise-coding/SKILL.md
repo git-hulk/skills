@@ -50,6 +50,11 @@ behavior, and the skill below exists to keep that order under time pressure.
 - **Surface area is a contract.** Method parameters, return types, interface methods, and API
   fields are the protocol between you and every caller. Private by default; export only what
   another package or client uses *now*, not what someone might want later.
+- **Group large signatures into structs.** When a function or method has more than four
+  explicit parameters, group its domain inputs into a parameter struct; count `context.Context`
+  toward the threshold but keep it separate from the struct, and exclude the method receiver.
+  When it returns more than three non-error values, group those values into a result struct and
+  keep `error` separate. Exactly four parameters or three non-error results do not trigger this rule.
 - **Ask when unsure, look up when possible.** If the code can answer, read it. If only the user
   can — product behavior, naming trade-offs, backward-compatibility policy — interview them one
   question at a time with a recommended answer ([`references/grill.md`](references/grill.md))
