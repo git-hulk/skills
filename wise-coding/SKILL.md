@@ -9,8 +9,9 @@ description: >
   only the few tests that protect behavior and compatibility. Use this whenever the user asks to
   add, implement, build, support, wire up, extend, or expose something in a repo they already
   have — a feature, a field, an endpoint, a table, a CLI flag, a library capability, a refactor —
-  even when it sounds small, and especially when it touches a database, a service interface, or
-  an API. Also for "写代码 / 实现这个功能 / 加个接口 / 加个字段".
+  especially across database, service, and API layers. For bugs, panics, hangs, or regressions, use the
+  bundled issue-fixes workflow to reproduce, diagnose, fix, and regression-test the failure.
+  Also for "写代码 / 实现这个功能 / 加个接口 / 加个字段 / 修复问题".
 ---
 
 # Wise Coding
@@ -28,8 +29,8 @@ behavior, and the skill below exists to keep that order under time pressure.
 | --- | --- |
 | Understanding a repo with no change to make | `fast-learning` |
 | A change big enough to need an RFC before code (new system, cross-service) | `write-technical-design`, then come back here |
-| A bug, panic, or regression | `diagnose` |
-| The user explicitly wants a red-green-refactor loop | `tdd` |
+| Diagnosis only, with no request to fix | `diagnose` |
+| Test-first feature development | `tdd` (for bug fixes, apply it within the issue-fixes flow) |
 | Checking an API against the AfterShip guidelines only | `rest-api-design` (use it *inside* step 5 when the repo follows those guidelines) |
 
 ## Principles
@@ -60,6 +61,13 @@ behavior, and the skill below exists to keep that order under time pressure.
   nothing; a test per behavior that must not change is insurance.
 
 ## Workflow
+
+For a request to fix an issue, bug, panic, hang, crash, or regression, read and follow
+[`references/issue-fixes.md`](references/issue-fixes.md) before implementation. It supplies the issue-fixing
+sequence, regression-test guidance, and PR template. The principles above still apply; use that
+sequence instead of the feature checklist below. If the user also requests TDD, apply its
+test-first order within the issue-fixing flow. Feature requests filed as issues use the regular
+workflow below; route by the requested behavior, not by whether an issue number exists.
 
 Copy this checklist into your reply and tick items as you go. Post each layer's design into the
 reply *before* writing its code; the design is what the user reviews, and it is the contract the
@@ -262,6 +270,7 @@ report results verbatim, including failures you could not fix. Then end with:
 
 | File | Read it when |
 | --- | --- |
+| [`references/issue-fixes.md`](references/issue-fixes.md) | Before fixing an issue or regression — reproduction, root cause, minimal fix, regression test, and delivery |
 | [`references/reading.md`](references/reading.md) | Step 0 — reading for a change: layers, conventions, sibling trace, subagent brief |
 | [`references/grill.md`](references/grill.md) | Step 2 — building the question tree and running the interview |
 | [`references/export-surface.md`](references/export-surface.md) | Steps 4 and 6 — minimal-export rules, helper test, per-language visibility mechanics |

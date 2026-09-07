@@ -37,6 +37,10 @@ Implement changes as if they were written by the repository's maintainers. The w
 - Keeping public contracts and exported surface area minimal
 - Testing compatibility and critical behavior instead of implementation details
 
+For bug fixes, Wise Coding follows its [Issue Fixes reference](wise-coding/references/issue-fixes.md)
+workflow: reproduce the failure, identify its cause, make the smallest fix, and verify a regression
+test. When a PR is requested, it uses a Problem / Reproduction / Fix / Test summary.
+
 ## Using a skill
 
 Copy or link the complete skill directory into the location supported by your coding assistant,
