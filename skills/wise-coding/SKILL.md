@@ -59,6 +59,11 @@ behavior, and the skill below exists to keep that order under time pressure.
   backwards produces a schema bent to fit a URL.
 - **Tests protect behavior, not lines.** A test per function is a maintenance tax that catches
   nothing; a test per behavior that must not change is insurance.
+- **Separate logical sections inside functions.** Use one blank line between sections of a
+  function body, such as validation, preparation, execution, and result handling. Keep closely
+  related statements together, including an operation and its immediate error check. Apply the
+  same grouping inside nested blocks; do not add blank lines immediately after an opening brace
+  or before a closing brace. Check this spacing when reviewing the diff.
 
 ## Workflow
 
