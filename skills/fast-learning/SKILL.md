@@ -151,6 +151,7 @@ checks, and a scoring table, so the analysis is evidence rather than an adjectiv
    background loop (scheduler, reconciler, consumer), startup/bootstrap, and one failure or
    recovery path (election, retry, migration, failover). One `sequenceDiagram` each, participants
    taken from the architecture diagram, every arrow labelled with the function that performs it.
+   Give each component a distinct color and keep its color consistent across all data flows.
    After each diagram, one sentence on what breaks if that step is skipped — that is what makes
    the step memorable.
 3. **Schema.** From migrations, models, or the storage package. One `erDiagram` with keys and

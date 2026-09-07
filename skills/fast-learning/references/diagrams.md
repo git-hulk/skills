@@ -19,8 +19,9 @@ roles to the repository; include a short legend for the colors actually used:
 | External dependencies / waiting | `#FEF3C7` | `#92400E` |
 | Failure / recovery, when present | `#FEE2E2` | `#991B1B` |
 
-For flowcharts and state diagrams, use `classDef` plus `class` assignments. For sequence diagrams,
-use `rect rgb(...)` blocks with notes naming each phase; do not use flowchart `classDef` syntax.
+For flowcharts and state diagrams, use `classDef` plus `class` assignments. For data flows, assign
+a distinct color to each component using the sequence-diagram guidance below; component identity
+takes precedence over this role palette. Do not use flowchart `classDef` syntax in sequence diagrams.
 Keep fills light and text dark; preserve labels, shapes, and branch annotations so meaning does
 not depend on color alone.
 
@@ -66,24 +67,31 @@ In-process arrows are call direction; cross-process arrows say the protocol.
 
 ## Data flow — `sequenceDiagram`
 
+Give every component a distinct color, even when components share a role. Keep each component's
+color consistent across all data flows. Wrap each participant in its own colored `box rgb(...)`
+to color its vertical lane; use the component name as the box label. Color identifies components,
+not execution phases. See [Mermaid's box syntax](https://mermaid.js.org/syntax/sequenceDiagram.html#grouping-box).
+
 ```mermaid
 sequenceDiagram
-    participant C as Client
-    participant A as api.CreateCluster
-    participant S as store.CreateCluster
-    participant E as etcd
-    rect rgb(219, 234, 254)
-        Note over C,A: Request handling
-        C->>A: POST /namespaces/{ns}/clusters
-        A->>A: validate (cluster.go:74)
+    box rgb(219, 234, 254) Client
+        participant C as Client
     end
-    rect rgb(243, 232, 255)
-        Note over A,E: Persistence
-        A->>S: CreateCluster(ns, cluster)
-        S->>E: Txn put /kvrocks/ns/cluster
-        E-->>S: revision
-        S-->>A: ok
+    box rgb(220, 252, 231) API
+        participant A as api.CreateCluster
     end
+    box rgb(243, 232, 255) Store
+        participant S as store.CreateCluster
+    end
+    box rgb(254, 243, 199) etcd
+        participant E as etcd
+    end
+    C->>A: POST /namespaces/{ns}/clusters
+    A->>A: validate (cluster.go:74)
+    A->>S: CreateCluster(ns, cluster)
+    S->>E: Txn put /kvrocks/ns/cluster
+    E-->>S: revision
+    S-->>A: ok
     A-->>C: 201 {cluster}
 ```
 
