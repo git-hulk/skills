@@ -48,6 +48,9 @@ order matters: a diagram whose boxes are words the user cannot define teaches no
   idea per diagram — conventions in [`references/diagrams.md`](references/diagrams.md)), prose only
   for *why*. Post each finished section into the reply as you go rather than one dump at the end;
   a person absorbs a glossary, then a map, then flows.
+- **Use colors in workflow and architecture diagrams.** Keep color meanings consistent across
+  the report, use readable fills and text, and retain labels or shapes so color is never the
+  only cue. Follow the palette and Mermaid styling in [`references/diagrams.md`](references/diagrams.md).
 - **Ask nothing you can look up.** The only questions for the user are about *their*
   understanding and *their* goals; the codebase answers everything else.
 

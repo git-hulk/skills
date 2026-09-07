@@ -5,6 +5,25 @@ concept or a real symbol from the code, never a paraphrase. Put the citation for
 line under it, not inside the labels (Mermaid chokes on `:` and `/` in labels — quote them:
 `A["server/route.go"]`).
 
+## Colors for workflows and architecture
+
+Use explicit colors in architecture and workflow diagrams, including sequence and state diagrams.
+Keep the same role or phase the same color throughout a report. Use this default palette, adapting
+roles to the repository; include a short legend for the colors actually used:
+
+| Role or phase | Fill | Border / text |
+| --- | --- | --- |
+| Entry points / request handling | `#DBEAFE` | `#1E40AF` |
+| Core processing | `#DCFCE7` | `#166534` |
+| Storage / persistence | `#F3E8FF` | `#6B21A8` |
+| External dependencies / waiting | `#FEF3C7` | `#92400E` |
+| Failure / recovery, when present | `#FEE2E2` | `#991B1B` |
+
+For flowcharts and state diagrams, use `classDef` plus `class` assignments. For sequence diagrams,
+use `rect rgb(...)` blocks with notes naming each phase; do not use flowchart `classDef` syntax.
+Keep fills light and text dark; preserve labels, shapes, and branch annotations so meaning does
+not depend on color alone.
+
 ## Concept relationship map — `flowchart`
 
 ```mermaid
@@ -32,6 +51,14 @@ flowchart TB
     Store --> Etcd[(etcd / consul / zk)]
     Ctl -->|"RESP probe"| KV[(kvrocks nodes)]
     Client --> API
+    classDef entry fill:#DBEAFE,stroke:#1E40AF,color:#1E40AF
+    classDef core fill:#DCFCE7,stroke:#166534,color:#166534
+    classDef storage fill:#F3E8FF,stroke:#6B21A8,color:#6B21A8
+    classDef external fill:#FEF3C7,stroke:#92400E,color:#92400E
+    class Client,API entry
+    class Ctl core
+    class Store,Etcd storage
+    class KV external
 ```
 
 One subgraph per process. Externals are cylinders `[( )]`; entry points are stadiums `([ ])`.
@@ -45,12 +72,18 @@ sequenceDiagram
     participant A as api.CreateCluster
     participant S as store.CreateCluster
     participant E as etcd
-    C->>A: POST /namespaces/{ns}/clusters
-    A->>A: validate (cluster.go:74)
-    A->>S: CreateCluster(ns, cluster)
-    S->>E: Txn put /kvrocks/ns/cluster
-    E-->>S: revision
-    S-->>A: ok
+    rect rgb(219, 234, 254)
+        Note over C,A: Request handling
+        C->>A: POST /namespaces/{ns}/clusters
+        A->>A: validate (cluster.go:74)
+    end
+    rect rgb(243, 232, 255)
+        Note over A,E: Persistence
+        A->>S: CreateCluster(ns, cluster)
+        S->>E: Txn put /kvrocks/ns/cluster
+        E-->>S: revision
+        S-->>A: ok
+    end
     A-->>C: 201 {cluster}
 ```
 
@@ -115,6 +148,12 @@ stateDiagram-v2
     Candidate --> Follower : newer election epoch seen
     Leader --> Follower : newer election epoch seen
     Leader --> Shutdown
+    classDef waiting fill:#FEF3C7,stroke:#92400E,color:#92400E
+    classDef active fill:#DCFCE7,stroke:#166534,color:#166534
+    classDef stopped fill:#F1F5F9,stroke:#475569,color:#475569
+    class Follower,Candidate waiting
+    class Leader active
+    class Shutdown stopped
 ```
 
 Use for state machines that the API's guarantees depend on.
