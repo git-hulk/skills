@@ -5,7 +5,7 @@ description: >
   change, its motivation, and its verification. Use when the user asks for a PR title, PR
   description, PR summary, commit subject, commit message, or wants existing Git prose made
   clearer. Follow repository-specific templates and conventions when present; otherwise use a
-  concise outcome-focused PR structure and a commit subject of at most 70 characters with a body
+  single message shared by the PR and commit: a subject of at most 70 characters and a body
   wrapped at about 72 characters. Do not use for release notes, changelogs, or general
   documentation.
 ---
@@ -22,6 +22,9 @@ unless the user separately asks for those actions.
 - **Evidence before prose.** Read the relevant diff, status, recent history, issue or request,
   tests, and repository templates before writing. Do not invent motivation, impact, compatibility,
   test results, issue links, or implementation details.
+- **One message for the PR and commit.** Draft one subject and body. Use the subject as the PR
+  title and the exact body as the PR summary, including verification and issue references. Do not
+  expand, shorten, or rephrase one independently; apply revisions to both.
 - **Lead with the outcome.** Titles and subjects name the primary observable change. Put supporting
   implementation details in the body rather than joining several changes into the first line.
 - **Explain cause and effect.** Prefer current behavior → problem or root cause → change →
@@ -61,21 +64,37 @@ for information that the repository or diff can provide.
 
 ## Pull request summary
 
-The default structure is derived from
-[Apache Kvrocks PR #1384](https://github.com/apache/kvrocks/pull/1384): establish the existing
-behavior, explain the failure and its cause, show concrete evidence when useful, then describe the
-corrected result.
+Use the commit message body verbatim, excluding the subject and its separating blank line.
+Preserve wording, paragraph order, headings, line wrapping, verification, and trailers. When a
+repository requires a PR template, apply its required sections to the shared body so the commit
+and PR remain identical. Do not add empty sections or duplicate the subject in the summary.
 
-For a small change, write two or three compact paragraphs without ceremonial headings:
+Use this default structure for the shared body:
 
-1. **Context and problem.** What the system already did, what failed or was missing, and why it
-   matters.
-2. **Change.** What behavior or logic changed and why that resolves the problem.
-3. **Result and verification.** The observable after-state, tests run, and related issue links.
+```text
+<Concise summary in commit-message style: explain what changed and why.
+Wrap prose at about 72 characters, separating paragraphs with blank lines.>
 
-Use short code blocks for before/after output when the output proves the behavior more clearly than
-prose. For a larger change, use descriptive headings such as `Problem`, `Changes`, and `Testing`, or
-the repository's PR template. Do not add empty sections.
+Before applying this PR:
+
+<Describe the current behavior and the conditions that trigger the bug.>
+
+After this PR:
+
+<Describe the corrected behavior under the same conditions.>
+
+Other important things to notice:
+
+<Include relevant verification, compatibility or migration consequences,
+operational caveats, and issue references.>
+```
+
+Start directly with the summary, without a heading. Include `Before applying this PR:` and
+`After this PR:` only for bug fixes; omit both for other changes. Use concrete examples or short
+code blocks when they clarify the behavior. Keep other important reviewer context in the final
+`Other important things to notice:` section; omit it when there is nothing material to add.
+If both artifacts are requested, write a concise shared body; a commit-only request may still
+use a subject alone.
 
 ## Commit message
 
@@ -117,20 +136,22 @@ Return only the artifacts requested. When the user asks for all three, use:
 ````markdown
 ## PR title
 
-<title>
+<shared subject>
 
 ## PR summary
 
-<summary>
+<shared body>
 
 ## Commit message
 
 ```text
-<subject>
+<shared subject>
 
-<optional body>
+<shared body>
 ```
 ````
 
 Before returning, count the PR title and commit subject, check the commit body's wrapping, and
-verify every factual claim against the available evidence.
+verify every factual claim against the available evidence. When both artifacts are requested,
+check that the PR title equals the commit subject and the PR summary equals the commit body
+exactly, excluding only the output wrappers.

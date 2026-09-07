@@ -5,15 +5,19 @@
       "id": 0,
       "name": "bug-fix-pr-and-commit",
       "prompt": "Write a PR title, PR summary, and commit message for this change: after loading cluster nodes from a local file, the parser retained each node's address but discarded its node ID. Matching then fell back to IP and port, which fails when the node listens on 0.0.0.0 but clients see 127.0.0.1. The change now assigns the parsed ID. Before the fix, CLUSTER NODES omitted the myself flag after restart; afterward it includes myself. Tests covering reload and node matching pass. Related issue: #1381.",
-      "expected_output": "A concise fix-oriented PR title; a PR summary that connects prior behavior, root cause, before/after symptom, corrected behavior, passing tests, and #1381 without inventing details; and a commit message with a subject of at most 70 characters, a blank line, and body prose wrapped at about 72 characters.",
+      "expected_output": "A concise fix-oriented PR title; a PR summary starting with a commit-style explanation of what changed and why, followed by Before applying this PR:, After this PR:, and a final Other important things to notice: section containing passing tests and #1381; and a commit message with the same subject and body, a subject of at most 70 characters, a blank line, and body prose wrapped at about 72 characters. Explain the root cause and concrete before/after behavior without inventing details.",
       "files": [],
       "assertions": [
         "PR title names the node ID reload or matching fix and is at most 70 characters",
         "PR summary explains why IP and port fallback fails for 0.0.0.0 versus 127.0.0.1",
-        "PR summary includes the before/after myself behavior and references #1381",
+        "PR summary opens with a concise commit-style explanation of the change and its reason, without a summary heading",
+        "Before applying this PR: describes the missing myself flag after restart; After this PR: describes its presence under the same conditions",
+        "The final Other important things to notice: section includes the passing reload and matching tests and #1381",
         "Commit subject is at most 70 characters and has no trailing period",
         "Commit body is separated from the subject by a blank line and wraps near 72 characters",
-        "No tests or implementation details are invented"
+        "No tests or implementation details are invented",
+        "PR title is identical to the commit subject",
+        "PR summary is identical to the commit body, including wording, line wrapping, verification, and issue references"
       ]
     },
     {
@@ -32,14 +36,14 @@
     {
       "id": 2,
       "name": "repository-template-takes-precedence",
-      "prompt": "Draft a PR title and summary for a repository whose CONTRIBUTING.md requires titles beginning with [storage] and a PR body with Motivation, Changes, and Testing sections. The patch adds a timeout to snapshot uploads so stalled requests release their worker. An integration test that holds the server response open now confirms the request times out and the worker accepts the next upload.",
-      "expected_output": "A title beginning with [storage], followed by the required Motivation, Changes, and Testing sections. The prose should explain the stalled-worker problem, timeout behavior, and observed integration test without adding unrelated sections.",
+      "prompt": "Draft a PR title, summary, and commit message for a repository whose CONTRIBUTING.md requires titles beginning with [storage] and a PR body with Motivation, Changes, and Testing sections. The patch adds a timeout to snapshot uploads so stalled requests release their worker. An integration test that holds the server response open now confirms the request times out and the worker accepts the next upload.",
+      "expected_output": "A title beginning with [storage], followed by the required Motivation, Changes, and Testing sections. The prose should explain the stalled-worker problem, timeout behavior, and observed integration test without adding unrelated sections. The commit subject matches the PR title, and the commit body matches the PR summary exactly, including the required headings.",
       "files": [],
       "assertions": [
         "PR title begins with [storage]",
         "Summary contains Motivation, Changes, and Testing sections",
         "Summary explains the problem, change, and verified result",
-        "No commit message or empty section is included"
+        "Commit subject matches the PR title and commit body matches the PR summary exactly, including template headings; no empty section is included"
       ]
     }
   ]
