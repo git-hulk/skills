@@ -38,6 +38,12 @@ behavior, and the skill below exists to keep that order under time pressure.
 - **Vocabulary is inherited.** The repo already has a word for most things you will touch. A
   new concept is a cost every future reader pays; introduce one only when no existing concept fits,
   and when you do, write down why and how it relates to the concepts it sits next to.
+- **Names describe meaning and responsibility.** Name types and values for what they represent,
+  and functions for what they do, using the repository's vocabulary. Apply this during structural
+  refactors too: grouping parameters or return values requires a naming decision. Review the type,
+  producer function, and caller variables together; do not append a suffix merely to avoid a name
+  collision. Suffixes such as `Result`, `Data`, or `Info` should convey a real distinction or follow
+  an established convention, rather than describe how the value happened to be created.
 - **Package and module layout is designed before files are added.** Understand the repository's
   existing package or module boundaries and dependencies first. Before adding a file, package,
   or module, state where it belongs, what responsibility it owns, and what may depend on it.
@@ -234,6 +240,9 @@ Read every diff hunk with one question: *who calls this?* Apply
   glossary already has. A function whose body is a single call to another function is a smell.
 - Every new parameter, option, flag, and field has a caller that passes a non-default value in
   this change. Otherwise remove it.
+- Read new or changed names at their call sites, including private helpers and wrapper structs.
+  Can a reader infer the value's role and the function's action without opening its implementation?
+  If not, revise the related names together before shipping; keep unrelated names out of scope.
 - Interface methods added: is every implementer updated, and did a caller need the method?
 - Exported constants, error variables, and types created just for the tests: make them private
   and test through the public behavior instead.
