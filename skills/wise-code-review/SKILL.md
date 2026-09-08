@@ -12,7 +12,8 @@ description: >
 
 Find problems a maintainer would fix, with enough evidence to explain when and why they occur.
 Use the loop **diff -> question -> narrow search -> focused read -> decision**. Read-only is the
-default: do not edit tracked files, commit, or publish review comments without a separate request.
+default: do not edit tracked files or commit without a separate request. Publish GitHub inline
+comments only for findings the human selects for posting in step 5.
 
 ## Review Contract
 
@@ -114,17 +115,22 @@ never claim a proposed test passed. Passing tests do not disprove an untested fa
 Follow a user- or repository-required output schema. Otherwise use this compact shape:
 
 ```text
-[P1] Preserve cancellation when starting the downstream request
+[P1] Preserve caller cancellation
 File: /absolute/path/client.go:42
 
-When the caller cancels ..., this changed call uses ... instead of ... .
-The downstream operation therefore ... . The caller at ... confirms ... .
-Pass ... through so ... .
+Using context.Background() discards the caller's cancellation and deadline, so the
+downstream request keeps running after the caller stops waiting. Pass ctx through.
 ```
 
-Use a short title and one paragraph explaining condition, cause, and impact; add a minimal fix
-direction only when clear. Cite the smallest useful range on changed lines, with related caller
-evidence when needed. Verify line numbers against the reviewed version, not a different checkout.
+Use a short, specific title and normally 2–3 short sentences per finding, including GitHub inline
+comments. Lead with the key issue and its triggering condition, explain the concrete impact, and
+add a brief fix direction only when useful. Include only the evidence needed to understand the
+bug; omit lengthy execution traces, repeated context, and testing narratives. Put reproduction
+commands and test results in the review's verification note instead. Keep essential qualifiers
+even when shortening a finding.
+
+Cite the smallest useful range on changed lines, with related caller evidence only when needed.
+Verify line numbers against the reviewed version, not a different checkout.
 For snippets, use supplied paths and lines without inventing absolute locations. For remote PRs,
 use verified diff links when available. Deduplicate findings with the same root cause.
 
@@ -138,6 +144,47 @@ scope and verification note, including unreviewed areas and tests not run. If no
 verification, say "No actionable findings" and retain relevant coverage limits. Do not lead with
 a change summary or dilute findings with compliments, personal style suggestions, or speculative
 warnings. Clearly distinguish cited coding-standard violations from demonstrated bugs.
+
+## 5. Select Valid Findings and Post GitHub Inline Comments
+
+For any review with actionable findings, including local reviews, show a checkbox checklist ordered
+by priority: P0, P1, P2, then P3. Give each finding a stable ID, its priority, a short title, and
+the reviewed location. Leave every checkbox unchecked:
+
+```markdown
+Select the findings you consider valid:
+
+- [ ] F1 — [P1] Preserve caller cancellation — client.go:42
+- [ ] F2 — [P2] Handle an empty result — parser.go:87
+```
+
+Use an interactive checkbox control when available; otherwise show Markdown checkboxes and
+accept a returned checklist marked with `[x]` or an explicit list of selected IDs. Wait for the
+human's selection. For local reviews, selection records which findings the human considers valid;
+it does not authorize edits or GitHub posting. Skip the checklist only when there are no findings.
+
+For GitHub PR reviews, change the selection prompt to "Select the findings you consider valid and
+want posted as GitHub inline comments." Start each comment with its priority and title in bold
+on the first line, for example `**[P1] Preserve caller cancellation**`, followed by a blank line
+and the finding paragraph from step 4. Show any revised wording before requesting selection.
+Selection in response to this posting prompt authorizes only those items; do not ask for the
+same approval again. Unchecked items, silence, and a generic request to
+review the PR do not authorize posting. If no items are selected, post nothing. Skip GitHub posting
+when there is no GitHub PR or the user requests a local-only review; use the local selection prompt.
+
+After selection for GitHub posting:
+
+1. Resolve the PR and recheck its current diff and head. Verify each selected finding still
+   applies and has a valid inline location, including the repository-relative path, diff side,
+   and line or range. If changes invalidate a finding or require materially different wording,
+   explain the change and return that item for selection; continue with unaffected selections.
+2. Always use authenticated `gh api` to post GitHub comments; do not use connectors or browser
+   automation. Post only the selected comment bodies at their verified diff locations.
+   Use a comment-only review, without approving the PR or requesting changes. If an item cannot
+   be anchored inline, report it as unposted.
+3. Verify the posted comments and return their links, along with any unposted selections and
+   reasons. If a request fails or its result is uncertain, inspect existing comments before
+   retrying so successfully posted items are not duplicated.
 
 ## Evaluating This Skill
 
