@@ -1,15 +1,7 @@
 # C++ Review Standards
 
-## First-Version Standard
-
-Use the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html) as the default
-coding standard. This first-version checklist was checked against the upstream guide on
-2026-09-08; it is a focused review baseline, not a complete copy or an upstream version number.
-Read the relevant linked section when its exceptions or details matter.
-
-Explicit user/repository rules and the target version's semantics take precedence. Preserve
-documented deviations; do not impose Google's current compiler baseline on an older target.
-Report standards violations separately in meaning from bugs, following `SKILL.md`.
+Check changed C++ code against the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
+Use the checklist to identify applicable rules, then read their linked exceptions before reporting.
 
 ## Establish the Build Contract
 

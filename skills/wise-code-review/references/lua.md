@@ -1,17 +1,9 @@
 # Lua Review Standards
 
-## First-Version Standard
+Check changed Lua code against the [Roblox Lua Style Guide](https://roblox.github.io/lua-style-guide/).
+Use the checklist to identify applicable rules, then read their linked exceptions before reporting.
 
-Use the [Roblox Lua Style Guide](https://roblox.github.io/lua-style-guide/) as the default coding
-standard. This first-version checklist was checked against the upstream guide on 2026-09-08;
-it is a focused review baseline, not a complete copy or an upstream version number. Read the
-relevant linked section when its exceptions or details matter.
-
-Explicit user/repository rules and the target runtime's semantics take precedence. Preserve
-documented deviations and existing public contracts. Distinguish cited standard violations from
-demonstrated bugs, following the finding contract in `SKILL.md`.
-
-## Roblox Checklist
+**Checklist**
 
 - [Structure](https://roblox.github.io/lua-style-guide/#file-structure): order imports, constants, implementation, exported object, and return; put Roblox services before imports where applicable.
 - [Imports](https://roblox.github.io/lua-style-guide/#requires): keep requires at the top, alphabetized within structural groups; consume libraries through their public APIs.
@@ -34,8 +26,8 @@ standalone Lua can expose different APIs and lifecycle rules. Do not infer the r
 `.lua` extension or the machine's default `lua` binary.
 
 Use the matching Lua reference manual as the semantic authority. LuaJIT has a Lua 5.1 compatibility
-baseline with documented extensions, not blanket Lua 5.4 compatibility. Apply the Roblox baseline
-and precedence above; use Luau documentation for Luau-specific behavior rather than treating Lua's
+baseline with documented extensions, not blanket Lua 5.4 compatibility. Check repository overrides
+and use Luau documentation for Luau-specific behavior rather than treating Lua's
 manual as authority for every Luau extension.
 
 ## Review Questions

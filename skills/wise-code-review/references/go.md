@@ -1,15 +1,7 @@
 # Go Review Standards
 
-## First-Version Standard
-
-Use the [Uber Go Style Guide](https://github.com/uber-go/guide/blob/master/style.md) as the default
-coding standard. This first-version checklist was checked against the upstream guide on
-2026-09-08; it is a focused review baseline, not a complete copy or an upstream version number.
-Read the relevant linked section when its exceptions or details matter.
-
-Explicit user/repository rules and the target version's semantics take precedence. Preserve
-documented deviations; do not spread a review into unrelated legacy cleanup. Report standards
-violations separately in meaning from bugs, following the finding contract in `SKILL.md`.
+Check changed Go code against the [Uber Go Style Guide](https://github.com/uber-go/guide/blob/master/style.md).
+Use the checklist to identify applicable rules, then read their linked exceptions before reporting.
 
 ## Uber Checklist
 
@@ -30,7 +22,7 @@ findings should cite a definite rule, not a personal preference, and should not 
 
 Inspect the owning module's `go.mod`, applicable `go.work`, build tags, toolchain, CI platforms,
 and lint configuration. A newer installed compiler alone does not establish the package's
-language version. Apply the standard and precedence above; the language specification and relevant
+language version. Check explicit repository overrides; the language specification and relevant
 package contracts govern correctness. Do not require API modernization outside the patch.
 
 ## Review Questions
@@ -82,6 +74,6 @@ Read formatter/linter configuration rather than running formatting commands that
 - [Go specification](https://go.dev/ref/spec): language rules; consult version history as needed.
 - [Go memory model](https://go.dev/ref/mem): synchronization and happens-before relationships.
 - [Go Code Review Comments](https://go.dev/wiki/CodeReviewComments): review conventions, not all
-  mandatory correctness rules; supplementary to the Uber baseline.
+  mandatory correctness rules; supplementary to the Uber guide.
 - [Standard library](https://pkg.go.dev/std): check the documentation for the selected version.
 - [Race detector](https://go.dev/doc/articles/race_detector): usage and limitations.

@@ -10,7 +10,7 @@ for its workflow.
 
 Review diffs for actionable bugs and regressions using targeted searches, focused reads, and
 verified findings. Uses Uber's Go Style Guide, Google's C++ Style Guide, and Roblox's Lua Style
-Guide as the initial language standards, with version-aware correctness and lifecycle checks.
+Guide for language-standard compliance, with version-aware correctness and lifecycle checks.
 Reviews are read-only unless changes are requested.
 
 ### [Fast Learning](skills/fast-learning/SKILL.md)
