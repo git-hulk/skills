@@ -30,14 +30,21 @@ for both version and mode (`dry-run` or `release`). Keep this filename as the
 single authoritative state; a reference to "state.json" does not create a second
 status file.
 
-Missing local state is normal. After version and mode are confirmed, check for
-JSON and legacy state. If both are absent, create the initial directory and JSON
-from the template automatically, without an initialization or expected-step
-question and without waiting for remote checks. Use exclusive creation or an
-atomic no-overwrite operation; reread if another process creates the file first.
-Preserve any existing draft or other files. Record known inputs from this run,
-leave unknown evidence and approvals null, and record initialization and the
-opening answer in history. Report step 1, `awaiting_confirmation`, and proceed.
+Missing local state does not establish that a release is new. After version and
+mode are confirmed, check for JSON and legacy state. If both are absent, first
+reconcile the confirmed version against GitHub: search the exact release
+discussion title/version and inspect matching discussions, tags, candidate tags,
+releases, and other resources required by the saved workflow. If any matching
+resource exists, recover the local record from verified remote evidence and run
+the expected-step checkpoint; if a check is incomplete, record `unverified` and
+stop. Only when those checks find no matching remote work may the initial
+directory and JSON be created automatically from the template, without an
+initialization or expected-step question and without waiting for further remote
+checks. Use exclusive creation or an atomic no-overwrite operation; reread if
+another process creates the file first. Preserve any existing draft or other
+files. Record known inputs from this run, leave unknown evidence and approvals
+null, and record initialization and the opening answer in history. Report step 1,
+`awaiting_confirmation`, and proceed.
 An unreadable, malformed, or incompatible file is not a missing file.
 
 Check actual remote resources before creating anything remotely. GitHub status
@@ -45,6 +52,18 @@ and existence checks need no confirmation; other reads follow `SKILL.md`.
 An empty local record never establishes remote absence. If
 existing remote work is found, reconcile it and confirm the recovered step before
 advancing. Do not restore a stale rehearsal's approvals as live evidence.
+
+Every resume must reconcile saved progress with concrete artifacts before status
+is reported or work continues. The JSON checker validates shape and consistency;
+it does not prove that files, refs, workflows, registry manifests, SVN entries,
+mail drafts, website branches, PRs, or manager handoffs still exist. For the
+saved step, inspect the artifact source named by its procedure and record
+`checked_at`, request/source, identity inputs, result (`matching`, `absent`,
+`conflicting`, or `unverified`), and discovered IDs, paths, hashes, revisions,
+or URLs. A missing or ambiguous artifact makes the step `unverified` and blocks
+advancement and retries. Preserve previous evidence and append the new
+reconciliation to history; never silently treat a JSON status or local filename
+as proof of a remote artifact.
 
 ```json
 {

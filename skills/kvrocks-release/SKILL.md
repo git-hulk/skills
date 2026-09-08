@@ -141,15 +141,27 @@ authorized simulated evidence. Label simulations and leave real creation results
    a second `state.json` with competing status.
    If only a legacy Markdown record exists, migrate it as described in the
    reference before continuing; never maintain status in Markdown.
-   If neither JSON nor legacy state exists, this is a normal start: **create the
-   initial local JSON automatically without asking**, using the already confirmed
-   version and mode and the record template. Set step 1 and `awaiting_confirmation`,
+   If neither JSON nor legacy state exists, do **not** assume that the release
+   has not started. Before initializing a new record, perform the required
+   read-only remote reconciliation for the confirmed version: search
+   `apache/kvrocks` discussions for the exact release title/version and inspect
+   any matching discussion's repository, category, title, body, creation time,
+   comments, and replies. Also check matching release tags, candidate tags,
+   GitHub releases, and other release resources covered by the saved workflow.
+   A matching discussion or other release resource means this is a recovered
+   release: create the local record from verified remote evidence, preserve the
+   discovered step/status and timestamps, and run the expected-step checkpoint
+   before advancing. If a check is unavailable or incomplete, record the result
+   as `unverified` and stop; do not initialize a clean record that could hide an
+   existing release. Only when those checks find no matching remote work is this
+   a normal start: **create the initial local JSON automatically without asking**,
+   using the already confirmed version and mode and the record template. Set step 1 and `awaiting_confirmation`,
    preserve any existing draft, and leave unknown inputs and approvals null.
-   Record the opening answer and initialization in history. Do not require remote
-   reads or an expected-step answer just to create this local record. Report the
-   initialized status and proceed to proposal preparation and GitHub checks without
-   a read checkpoint. Local initialization does not prove that remote resources are
-   absent; inspect and reconcile those before remote creation.
+   Record the opening answer and initialization in history. Since the required
+   remote reconciliation already established that no matching work exists,
+   report the initialized status and proceed to proposal preparation without an
+   expected-step checkpoint. Local initialization still does not authorize any
+   remote creation.
 2. Run the read-only helper on the existing or newly initialized record:
 
    ```bash
@@ -171,6 +183,34 @@ authorized simulated evidence. Label simulations and leave real creation results
    verified evidence, then show and confirm the recovered step before continuing.
    Never fabricate earlier approvals or assume a missing local file means that
    release resources do not exist.
+
+   On every resumption, reconcile the saved progress against the concrete
+   artifacts for the saved step before reporting status, advancing, or retrying.
+   Read the complete JSON first, then inspect the artifact sources listed below;
+   a saved status is a claim to verify, not evidence by itself. Record the check
+   time, source/request, identity inputs, result (`matching`, `absent`,
+   `conflicting`, or `unverified`), and discovered IDs, paths, hashes, revisions,
+   or URLs in the owning step object or `external_operations`. Preserve successful
+   prior outcomes, but replace a stale or conflicting claim with an explicit
+   blocker and stop.
+
+   | Saved step | Required progress reconciliation before reporting or acting |
+   | --- | --- |
+   | 1 | Re-read the GitHub discussion, body, creation time, deadline, comments, and replies; compare the URL and timestamps in JSON. |
+   | 2 | Inspect the checkout, release branch/ref, candidate tag, archive/signature/checksum paths, hashes, validation logs, and remote refs; never infer staging from filenames alone. |
+   | 3 | Inspect the exact candidate-tag workflow run/jobs and the registry image digest/platform manifest; never infer readiness from a completed local build or old run. |
+   | 4a | Inspect the staged archive, signature, checksum, KEYS, downloaded copies, hashes, signer result, archive contents, license/header checks, and build result; rerun or re-read only the missing evidence. |
+   | 4b | Inspect the confirmed sender, reviewed payload hash, artifact/link review, and matching Gmail draft or manual handoff; preserve human edits and invalidate changed content. |
+   | 5 | Inspect the recorded vote start/deadline, manager outcome answer, and result-email evidence; do not replace the manager's vote decision with an inferred tally. |
+   | 6 | Inspect SVN source/destination inventories and revisions, candidate/version/latest image digests, and the manager's GitHub release-note confirmation before claiming publication. |
+   | 7 | Inspect the website checkout/branch, generated release links, diff, pushed ref, and matching PR before claiming the website change exists. |
+   | 8 | Inspect the saved handoff/completion record and required prior website/publication artifacts; do not infer announcement completion from a draft or request. |
+
+   If an artifact source is unavailable, incomplete, or ambiguous, report the
+   step as `unverified` and stop before advancement or retry. A local path,
+   cached log, draft, or JSON field is not proof that its corresponding remote
+   artifact exists. GitHub status/existence checks remain read-only; other artifact
+   reads and downloads follow the external-operation confirmation rules.
    For saved step-2 state, resume via [the source-release procedure](references/source-release.md).
    For step 3, use [the Docker readiness procedure](references/docker-readiness.md).
    For step 4 verification statuses, use [the uploaded candidate verification procedure](references/verify-candidate.md).
