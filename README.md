@@ -6,6 +6,13 @@ for its workflow.
 
 ## Available skills
 
+### [Wise Code Review](skills/wise-code-review/SKILL.md)
+
+Review diffs for actionable bugs and regressions using targeted searches, focused reads, and
+verified findings. Uses Uber's Go Style Guide, Google's C++ Style Guide, and Roblox's Lua Style
+Guide as the initial language standards, with version-aware correctness and lifecycle checks.
+Reviews are read-only unless changes are requested.
+
 ### [Fast Learning](skills/fast-learning/SKILL.md)
 
 Build a defensible mental model of an unfamiliar repository before making changes. The workflow

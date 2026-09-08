@@ -1,0 +1,116 @@
+{
+  "skill_name": "wise-code-review",
+  "evals": [
+    {
+      "id": 0,
+      "name": "go-cancellation-regression",
+      "prompt": "Review this Go diff. The repository uses Go 1.21. Base code: `func Load(ctx context.Context, url string) ([]byte, error) { req, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil); resp, err := http.DefaultClient.Do(req); if err != nil { return nil, err }; defer resp.Body.Close(); return io.ReadAll(resp.Body) }`. Changed code: `func Load(ctx context.Context, url string) ([]byte, error) { req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil); resp, err := http.DefaultClient.Do(req); if err != nil { return nil, err }; defer resp.Body.Close(); return io.ReadAll(resp.Body) }`. Report only actionable findings.",
+      "expected_output": "One P1 or P2 finding on the changed line explaining that caller cancellation and deadline are discarded, with a reachable impact and a precise line reference. Do not report the unrelated ignored request-construction error unless the review establishes it as introduced by the diff.",
+      "files": [],
+      "assertions": [
+        "Identifies loss of the caller context as the primary defect",
+        "Explains cancellation or deadline impact under a reachable request path",
+        "Cites the changed context.Background call or supplied snippet location",
+        "Does not invent tests, repository paths, or unrelated findings"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "cpp-dangling-reference",
+      "prompt": "Review this C++17 diff. Base: `std::string_view name(const User& u) { return u.name(); }`. Changed: `std::string_view name(const User& u) { std::string normalized = normalize(u.name()); return normalized; }`. `User::name()` returns a const std::string& to a member; the User stays alive and unchanged throughout the caller's use. `normalize` returns a std::string and the caller stores the result for use after the function returns. Report only actionable findings.",
+      "expected_output": "One P1 or P2 finding identifying the dangling string_view after normalized is destroyed, explaining the use-after-lifetime and citing the return line. Do not merely recommend a style change or claim that string_view always owns data.",
+      "files": [],
+      "assertions": [
+        "Identifies the returned view as referring to a destroyed local string",
+        "Explains the caller's later use can access invalid storage",
+        "Cites the changed return or local lifetime precisely",
+        "Does not add unsupported ABI, compiler, or sanitizer claims"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "lua-false-default-regression",
+      "prompt": "Review this Lua 5.1 diff. The option `enabled` intentionally accepts false to disable a feature. Base: `local enabled = opts.enabled; if enabled == nil then enabled = true end`. Changed: `local enabled = opts.enabled or true`. Report only actionable findings.",
+      "expected_output": "One P2 finding explaining that `or true` replaces the intentional false value with true and enables a feature the caller disabled. Cite the changed expression and do not suggest APIs unavailable in Lua 5.1.",
+      "files": [],
+      "assertions": [
+        "Identifies false being replaced by true",
+        "Uses correct Lua truthiness without requiring unrelated explanation of zero or empty strings",
+        "Explains the observable feature-enable regression",
+        "Cites the changed expression and does not require Lua 5.4 features"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "clean-go-loop-version-control",
+      "prompt": "Review this Go diff. The module declares `go 1.22`, CI builds it with Go 1.22, and no build tags override the language version. Base: `func Start(xs []string) { for _, x := range xs { x := x; go func() { use(x) }() } }`. Changed: `func Start(xs []string) { for _, x := range xs { go func() { use(x) }() } }`. `use` is concurrency-safe and completes independently; Start intentionally launches detached work. Report only actionable findings.",
+      "expected_output": "No actionable findings. Removing the redundant loop-variable copy preserves behavior under Go 1.22's per-iteration semantics. Do not report a historical capture bug or invent a detached-work violation.",
+      "files": [],
+      "assertions": [
+        "Reports no actionable finding",
+        "Does not report a historical loop-variable capture bug under Go 1.22 without additional evidence",
+        "Does not invent a comment-style violation or test result"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "google-default-standard",
+      "prompt": "Review the added line `using namespace std;` at parser.cc:12. The C++17 repository has no overriding style policy. This source file includes <string>, has no ambiguous names, and compiled successfully. Assess correctness and the skill's default coding standard; do not edit files.",
+      "expected_output": "A P3 Google Namespaces standard violation with a source citation and a focused correction using qualified names or selective declarations. Do not invent a compilation failure or undefined behavior.",
+      "files": [],
+      "assertions": [
+        "Applies Google's guide by default and cites its Namespaces rule",
+        "Reports a standard violation rather than an invented runtime or compilation defect",
+        "Suggests a focused correction on parser.cc:12 without editing"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "uber-default-standard",
+      "prompt": "Review a Go patch whose only change adds `log.Printf(\"load failed: %v\", err)` at loader.go:18 immediately before the existing `return err` inside an error branch. The application entrypoint already logs this returned error, so one failure now produces both messages. The repository has no overriding style policy. Assess correctness and the skill's default coding standard; do not edit files.",
+      "expected_output": "A focused finding citing Uber's Handle Errors Once rule, identifying duplicate handling and recommending removing the newly added log or moving handling to the owning boundary. Do not invent a data loss or crash scenario.",
+      "files": [],
+      "assertions": [
+        "Applies Uber's guide by default and cites Handle Errors Once",
+        "Connects the new log-and-return path to duplicate logging at the entrypoint",
+        "Gives a minimal correction without inventing higher-severity effects"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "repository-override-and-google-exception",
+      "prompt": "Review this C++17 snippet change. Repository policy explicitly permits exceptions and requires PascalCase methods. The function is renamed to `void Validate(int value)` and adds `if (value < 0) throw std::invalid_argument(\"negative value\");`. Negative values were previously unsupported; the updated contract now requires this exception. All callers catch std::invalid_argument, no state is mutated before the throw, and all declarations/callers are updated. Includes and formatting conform. Assess the skill's default standard as well as correctness, using only this evidence.",
+      "expected_output": "No actionable findings. Honor the explicit repository exception policy instead of treating Google's default prohibition as a C++ language restriction. Do not invent incompatible callers.",
+      "files": [],
+      "assertions": [
+        "Honors the repository's explicit exception policy over the Google default",
+        "Reports no actionable findings on the supplied evidence",
+        "Does not invent language illegality, unhandled exceptions, or unupdated callers"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "roblox-default-standard",
+      "prompt": "Review this Lua 5.1 patch for correctness and the default coding standard. At counter.lua:8 it adds the local mutable variable `local item_count = 0`, used later and not exported. There is no overriding repository naming policy and no behavioral defect is evident. All other formatting and code conform. Do not edit files.",
+      "expected_output": "A P3 standard violation citing Roblox's Naming section and suggesting itemCount. Do not present snake_case as illegal Lua or claim a runtime failure.",
+      "files": [],
+      "assertions": [
+        "Uses Roblox's Naming rule as the default and cites it",
+        "Suggests itemCount for the local variable at counter.lua:8",
+        "Distinguishes the style violation from a language or runtime defect"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "roblox-runtime-and-repository-boundaries",
+      "prompt": "Review this plain Lua 5.1 patch for correctness and the default coding standard. Repository policy explicitly requires snake_case locals. At config.lua:10 it adds `local scale_value = enabled and 1 or 2`. The input enabled is boolean, and the result must be 1 when true and 2 otherwise. All other formatting and code conform. This runtime has no Roblox APIs or Luau syntax. Use only this evidence.",
+      "expected_output": "No actionable findings: respect the repository naming override and do not require Luau if-expression syntax in Lua 5.1. Both numeric branches are truthy and the supplied contract is satisfied.",
+      "files": [],
+      "assertions": [
+        "Honors the repository's snake_case policy over the default naming rule",
+        "Does not propose Luau if-expressions, type annotations, or Roblox APIs",
+        "Reports no actionable findings rather than inventing an and/or truthiness bug"
+      ]
+    }
+  ]
+}
