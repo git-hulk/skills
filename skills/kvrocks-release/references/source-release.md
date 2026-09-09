@@ -23,14 +23,49 @@ work and reconcile local tags, artifacts, and recorded external-operation result
 before rerunning anything. Keep step-1 discussion and approval evidence intact.
 Run the state checker after entering step 2 and after each saved outcome.
 
+## Prepare the release branch and exclusion patch
+
+For a release `VERSION`, derive the target release branch from its major and
+minor components: `MAJOR.MINOR` (for example, `2.17.0` uses branch `2.17`).
+Do not use the candidate tag or a `codex/` branch as the release branch. In an
+isolated checkout, inspect the remote branch and local path before changing
+anything. If the target branch exists, check it out; if it is absent, stop and
+ask the release manager whether creating it is intended. Do not silently create
+or push a branch. Record the branch ref and its starting commit.
+
+After checking out the target branch, check out the approved proposal cutoff
+commit by its full SHA. Verify that the commit belongs to the intended upstream
+repository and that the working tree is clean before applying release changes.
+The cutoff commit is the starting point for the release branch; do not package
+from a stale local `unstable` branch or from the user's active checkout.
+
+Apply the exclusions agreed in step 1 locally on this release branch. Inspect the
+diff against the cutoff and verify each excluded feature is removed from the
+release surface while required retained data structures, metadata, and unrelated
+changes remain intact. Save the patch and a concise feature-by-feature review in
+`source_release.exclusion_patch` and `history`.
+
+Stop before committing or packaging and show the release manager the exact
+branch, cutoff SHA, changed files, diff/stat, and explanation of every exclusion
+and retained change. Ask for explicit review of the exclusion patch. A proposal
+approval or step-2 entry confirmation does not approve these source changes.
+If the manager requests changes, update the patch and repeat the review. If the
+manager rejects an exclusion or the diff is ambiguous, keep the step blocked.
+
+After the exclusion patch is approved, commit it on the target `MAJOR.MINOR`
+branch with a release-scoped commit message. Record the resulting prepared
+commit and verify the commit contains only reviewed release changes. Only then
+continue to candidate planning and source packaging.
+
 ## Prepare a concrete candidate plan
 
 Confirm any unresolved candidate inputs together:
 
-- Release branch and starting SHA. The guide uses `X.Y` for a feature release and
-  the existing `X.Y` branch for a patch release. Verify or create it only within
-  the approved scope. Propose a separate local `codex/` working branch in an
-  isolated clone when needed; do not change the user's active checkout.
+- Release branch and starting SHA. The guide uses the `MAJOR.MINOR` branch
+  derived above. Verify it exists remotely before using it. If it is absent,
+  prepare the exact branch-creation operation and obtain separate approval before
+  creating or pushing it. Use a separate isolated checkout; do not change the
+  user's active checkout.
 - Candidate number, a positive integer, and resulting tag `vVERSION-rcN`. If no
   number was supplied or saved, propose **1** and show `vVERSION-rc1`. Ask the
   release manager whether that RC number is correct as part of this candidate-plan
@@ -66,10 +101,15 @@ resource check in the step state. The inspected implementation during skill
 authoring does the following in order:
 
 1. Writes the supplied version to `src/VERSION.txt`.
-2. Runs `git commit -a`, which includes all tracked modifications, and creates an
-   annotated `vVERSION-rcN` tag.
+2. Runs `git commit -a`, which includes the version-file change, and creates an
+   annotated `vVERSION-rcN` tag on top of the already committed, manager-reviewed
+   exclusion patch.
 3. Archives `HEAD` with the prefix `apache-kvrocks-VERSION-src/`.
 4. Creates a detached armored GPG signature and SHA-512 checksum.
+
+The package helper's version commit is separate from the reviewed exclusion
+commit. Never let it absorb unreviewed files or replace the exclusion commit.
+Inspect `git status` and the commit parent before running it.
 
 The command below has **no dry-run option**. Preview its local changes and signer
 before any run, and use a clean, isolated checkout containing only reviewed
