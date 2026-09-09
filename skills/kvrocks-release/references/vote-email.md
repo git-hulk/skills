@@ -56,32 +56,58 @@ Subject: [VOTE] Release Apache Kvrocks VERSION
 
 Hello Apache Kvrocks PMC and Community,
 
-This is a call for a vote to release Apache Kvrocks version VERSION.
-The candidate to be voted on is CANDIDATE_TAG.
+    This is a call for a vote to release Apache Kvrocks version VERSION.
 
-Release candidate:
-VERIFIED_SOURCE_CANDIDATE_URL
+    The tag to be voted on is CANDIDATE_TAG.
 
-Keys to verify the release candidate:
-https://downloads.apache.org/kvrocks/KEYS
+    The release candidate:
 
-Git tag:
-https://github.com/apache/kvrocks/tree/CANDIDATE_TAG
-Commit: PREPARED_COMMIT
+    VERIFIED_SOURCE_CANDIDATE_URL
 
-Docker image: VERIFIED_IMAGE_REF
-Digest: VERIFIED_IMAGE_DIGEST
 
-Please download, verify, and test the release candidate.
-The vote will remain open for at least 72 hours.
+    Keys to verify the release candidate:
 
-[ ] +1 approve
-[ ] +0 no opinion
-[ ] -1 disapprove with the reason
+    https://downloads.apache.org/kvrocks/KEYS
 
-Thank you,
-CONFIRMED_SENDER_NAME_OR_ADDRESS
+
+    Git tag for the release:
+
+    https://github.com/apache/kvrocks/releases/tag/CANDIDATE_TAG
+
+    Docker image:
+
+    VERIFIED_DOCKER_IMAGE_LINK
+
+    Please download, verify, and test.
+
+    The VOTE will remain open for at least 72 hours.
+
+    [ ] +1 approve
+    [ ] +0 no opinion
+    [ ] -1 disapprove with the reason
+
+    To learn more about apache kvrocks, please see
+    https://kvrocks.apache.org/
+
+    Checklist for reference:
+
+      [ ] Download links are valid.
+      [ ] Checksums and signatures.
+      [ ] LICENSE/NOTICE files exist
+      [ ] No unexpected binary files
+      [ ] All source files have ASF headers
+      [ ] Can compile from source
+      [ ] All Tests Passed
+      [ ] Docker image with right version
+      [ ] Docker image contains license files
+      [ ] Docker image can work well
+
+      More detailed checklist  please refer to:
+      https://kvrocks.apache.org/community/verify-a-release-candidate
+
+Thanks
 ```
+
 
 Use a signature supplied by the manager or the confirmed address, not an invented
 name. Add release notes or claims about validation only when supported by evidence.
