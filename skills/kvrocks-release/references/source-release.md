@@ -1,9 +1,10 @@
 # Create source releases and stage
 
 Follow the [official section](https://kvrocks.apache.org/community/create-a-release/#create-source-releases-and-stage).
-Its scope is release-branch preparation, source packaging, build validation, and
-pushing the candidate tag. SVN artifact upload is a separate following section;
-do not perform it under this step. The user's deadline and confirmation gates
+Its scope is release-branch preparation, source packaging, build validation,
+initial SVN staging of the candidate artifacts, and pushing the candidate tag.
+Initial SVN staging belongs to this step; final SVN promotion to the public
+release directory remains a later publication operation. The user's deadline and confirmation gates
 apply before any release preparation even where the guide describes earlier
 branch creation. Reading or editing this skill does not start a release step.
 Local validation here does not replace [step 4a verification](verify-candidate.md)
@@ -150,6 +151,41 @@ signer; do not use a production release key for a rehearsal. If actual local
 artifacts or build results were not produced, record them as planned/simulated,
 never as verified. A simulated staging result cannot be reused as live evidence.
 
+## Stage the verified artifacts in SVN
+
+After the archive, detached signature, and SHA-512 checksum pass local
+verification, inspect the Apache dist staging repository before writing. Use the
+exact source URL and candidate directory:
+
+```text
+https://dist.apache.org/repos/dist/dev/kvrocks/VERSION
+```
+
+Read the parent directory and candidate path first. If the candidate directory
+exists, compare its complete contents and hashes with the local manifest. Reuse a
+matching directory; stop on conflicting files or an incomplete read. If absent,
+prepare the exact three-file add and commit operation with message
+`Stage Apache Kvrocks VERSION RCN`. The write must add only:
+
+```text
+apache-kvrocks-VERSION-src.tar.gz
+apache-kvrocks-VERSION-src.tar.gz.asc
+apache-kvrocks-VERSION-src.tar.gz.sha512
+```
+
+Show the destination, SVN revision observed before the write, file names and
+SHA-512 values, commit message, and expected effects. Obtain separate manager
+approval for this SVN write; step-transition or tag-push approval does not
+authorize it. In release mode, commit only after approval. In dry-run, record the
+exact operation without contacting SVN.
+
+After a live commit, record the returned SVN revision and download each committed
+file from the exact URL. Compare downloaded bytes and hashes with the local
+manifest, and mark staging complete only after all three match. An ambiguous
+commit remains uncertain until reconciled; never blindly retry. Initial staging
+is not final publication and does not move files into
+`https://dist.apache.org/repos/dist/release/kvrocks/VERSION`.
+
 ## Preview and confirm the tag push
 
 For a live push, finish successful candidate validation first and set
@@ -187,7 +223,7 @@ remote tag, or `dry_run_source_release_staged` for a completed rehearsal of the
 checkpoints. Record `source_release.completed_at` at that point and preserve it
 when entering step 3. A failed/ambiguous push uses `tag_push_uncertain`; reconcile before
 retrying and retain artifacts and the local tag. Record the exact outcome and
-next action, then stop. No SVN uploads, GitHub release publication, Docker retags,
+next action, then stop. No final SVN promotion, GitHub release publication, Docker retags,
 votes, or announcements are performed by this step.
 The next defined step monitors the existing GHA run and Docker image readiness;
 show its scope and obtain manager confirmation before entering it.
@@ -212,6 +248,17 @@ answer in history. An existing confirmation for the same candidate remains valid
   "prepared_commit": null,
   "tag_object": null,
   "artifacts": [],
+  "svn_staging": {
+    "source_url": null,
+    "candidate_path": null,
+    "repository_revision_before": null,
+    "files": [],
+    "commit_message": null,
+    "operation_id": null,
+    "status": "pending",
+    "revision": null,
+    "verified_at": null
+  },
   "validation": [],
   "tag_push_operation_id": null,
   "remote_tag": null,

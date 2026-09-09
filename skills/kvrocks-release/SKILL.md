@@ -6,8 +6,8 @@ description: Prepare and resume Apache Kvrocks releases with per-version JSON st
 # Kvrocks Release
 
 Implement one release step at a time as the release manager supplies it. Defined
-steps are (1) the release-proposal discussion, (2) Create source releases and
-stage, (3) Build and push Docker images, which monitors the existing tag-triggered
+steps are (1) the release-proposal discussion, (2) Create source releases, stage
+artifacts in SVN, and prepare the candidate, (3) Build and push Docker images, which monitors the existing tag-triggered
 workflow and verifies image readiness, (4a) Verify the uploaded release candidate,
 (4b) Draft the release vote email, and
 (5) Wait for voting and draft the vote result, (6) Publish SVN artifacts and
@@ -16,8 +16,8 @@ Docker images, then ask the manager to publish GitHub release notes, and
 to send the announcement, then finish the process. After completion, offer to
 remove this release's local artifacts only after approval of the exact paths.
 Adding instructions does not enter or approve a step for an active release.
-Initial SVN artifact uploads, automatic mail sending, and old-release cleanup
-remain outside the defined steps. The manager sends the final announcement.
+Automatic mail sending and old-release cleanup remain outside the defined steps.
+The manager sends the final announcement.
 
 ## Required opening question
 
@@ -419,11 +419,12 @@ Only enter a defined next step once the deadline has elapsed, the discussion has
 no unresolved objections, and the release manager has confirmed that transition.
 Keep these results and the pending action in the per-version release record.
 
-## Step 2: Create source releases and stage
+## Step 2: Create source releases, stage artifacts in SVN, and prepare the candidate
 
 Read [the source-release procedure](references/source-release.md) before starting
 step 2 or resuming its work. It covers release-branch preparation, source
-packaging/signing, validation, and a separately confirmed candidate-tag push.
+packaging/signing, validation, initial SVN artifact staging, and a separately
+confirmed candidate-tag push. Final SVN promotion remains in step 6.
 For a new candidate with no supplied or saved RC number, propose **RC1** and ask
 the release manager to confirm the number and resulting `vVERSION-rc1` tag before
 packaging. Preserve an already confirmed RC number on resume; see the procedure
