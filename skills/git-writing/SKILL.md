@@ -83,10 +83,7 @@ After this PR:
 
 <Describe the corrected behavior under the same conditions.>
 
-Other important things to notice:
-
-<Include relevant verification, compatibility or migration consequences,
-operational caveats, and issue references.>
+Assistant-By <MODEL>
 ```
 
 Start directly with the summary, without a heading. Include `Before applying this PR:` and
