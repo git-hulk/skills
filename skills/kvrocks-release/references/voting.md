@@ -11,11 +11,16 @@ manager to assess; an independent agent verification is not required.
    recorded mode and confirm entry to step 5. Preserve the opening `email` and
    its outcome in `vote.proposal_email_status`; save the new entry confirmation
    with `target_step: 5`, candidate tag, and prepared commit.
-2. Use an already recorded actual vote start time, or ask the release manager
-   when the opening vote email was sent, including timezone. Record `started_at`
-   and its source in `start_record`. A manager-supplied timestamp is sufficient;
-   no archive lookup is needed. A draft, handoff, or "sent" without a usable
-   timestamp does not start the clock. Use `awaiting_vote_start` while missing.
+2. Check Gmail in the confirmed release account for the candidate's sent vote
+   message before asking for a timestamp. Search by the exact candidate subject
+   and recipient, for example `from:CONFIRMED_FROM to:dev@kvrocks.apache.org
+   subject:"[VOTE] Release Apache Kvrocks VERSION RCN"`. Read matching results
+   and record the message ID, subject, sender, recipient, and `email_ts` as
+   `start_record.source: gmail_search` when the message is present. If Gmail is
+   unavailable or no matching sent message is found, ask the release manager
+   when the opening vote email was sent, including timezone. A draft, handoff,
+   or "sent" without a usable timestamp does not start the clock. Use
+   `awaiting_vote_start` while missing.
 3. Set `minimum_end_at = started_at + 259200 seconds` (72 hours). If a longer
    voting period was announced and recorded, honor `announced_end_at` as well.
    Keep these instants separate from the cherry-pick deadline and preserve them
@@ -33,6 +38,13 @@ manager to assess; an independent agent verification is not required.
 At or after the deadline, use `awaiting_vote_outcome`. Show the version/candidate,
 recorded start time, elapsed deadline, and mode, and state the proposed next step:
 draft an unsent vote-result email. Ask the release manager whether the vote passed.
+
+Before asking, search Gmail again in the confirmed account for the exact vote
+subject and candidate. Read the matching sent message and any replies that Gmail
+returns, and record the search time, query, message/thread IDs, and snippets in
+`vote.gmail_status_check`. This is status evidence only: do not count replies,
+interpret ballots, verify PMC membership, or infer passage from Gmail. The
+release manager's explicit outcome remains required.
 
 - **Yes:** record `outcome_confirmation.passed: true` with the manager, current
   time, mode/simulation marker, candidate, start, and effective deadline. Record
@@ -108,6 +120,7 @@ Keep `vote` and `result_email` null before step 5. After entry approval, use:
   },
   "started_at": null,
   "start_record": null,
+  "gmail_status_check": null,
   "minimum_end_at": null,
   "announced_end_at": null,
   "outcome_confirmation": null,
@@ -115,7 +128,7 @@ Keep `vote` and `result_email` null before step 5. After entry approval, use:
 }
 ```
 
-`start_record` records `source` (`release_manager` or `prior_record`), `by`, `at`,
+`start_record` records `source` (`gmail_search`, `release_manager`, or `prior_record`), `by`, `at`,
 `mode`, `simulated`, and optional source details. A prior actual start timestamp
 can be retained without reopening its archive source; never turn draft creation
 time into a vote start. `outcome_confirmation` records `by`, `at`, `mode`,
