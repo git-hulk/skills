@@ -488,11 +488,13 @@ Drafting does not start the vote clock or authorize sending or the next step.
 ## Step 5: Wait for voting and draft the vote result
 
 Follow [the voting procedure](references/voting.md). Confirm entry after the vote
-email draft/handoff. Use the recorded vote start time or ask the release manager
-when the vote email was sent; a draft alone does not start the clock.
-Wait at least 72 hours, then **ask the release manager whether the vote passed**
-before entering the next step. Do not inspect the vote thread, count ballots, or
-verify PMC membership; the release manager determines the outcome.
+email draft/handoff. Search the confirmed Gmail account for the exact sent vote
+message and use its `email_ts` when present; otherwise ask the release manager
+when the vote email was sent. A draft alone does not start the clock. At the
+outcome checkpoint, search Gmail again for the exact vote subject and record the
+matching sent message and any returned replies as status evidence. Do not count
+ballots, inspect mailing-list threads, or verify PMC membership; the release
+manager determines the outcome.
 
 Save the manager's answer, identity, time, candidate, and mode in JSON. A missing,
 unclear, early, or negative answer cannot authorize advancement. A positive answer

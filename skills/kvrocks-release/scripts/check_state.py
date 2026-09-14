@@ -660,7 +660,7 @@ def evaluate_vote(state, current):
     start_record = vote.get("start_record")
     recorded = confirmed_at(start_record, state["mode"])
     if (
-        start_record.get("source") not in {"release_manager", "prior_record"}
+        start_record.get("source") not in {"release_manager", "prior_record", "gmail_search"}
         or start_record.get("simulated") is not simulated
         or not instant(state["email"]["completed_at"]) <= started <= recorded <= current
     ):
