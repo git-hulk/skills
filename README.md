@@ -6,6 +6,18 @@ for its workflow.
 
 ## Available skills
 
+### [Coding Loop](skills/coding-loop/SKILL.md)
+
+The entry point for implementation requests. Classifies the work first — bug fix, small feature
+(≤ 200 changed lines), medium feature (simple scope but > 200 lines), or large feature — then
+routes it through the right skills: `issue-fixes` for bugs, `wise-coding` for small features,
+`task-breakdown` plus `wise-coding` for medium ones, and `write-technical-design` with human
+approval before breakdown and implementation for large ones. `wise-coding` and `git-writing`
+live in this repository; `issue-fixes`, `task-breakdown`, and `write-technical-design` come from
+[AfterShip/skills](https://github.com/AfterShip/skills). Every implementation runs in an
+isolated git worktree, dependent PRs are organized with `gh stack`, commit and PR prose comes
+from `git-writing`, and each PR does exactly one thing.
+
 ### [Wise Code Review](skills/wise-code-review/SKILL.md)
 
 Review diffs for actionable bugs and regressions using targeted searches, focused reads, and
