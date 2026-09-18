@@ -38,6 +38,19 @@
         "The type remains private and error remains a separate return value",
         "The response does not rename HealthCheckResult or prohibit meaningful Result suffixes"
       ]
+    },
+    {
+      "id": 4,
+      "name": "split-independent-bugs-into-commits",
+      "prompt": "A Go parser has two confirmed bugs in parser.go: an unterminated block comment loops forever because the scanner never advances, and formatting an empty token list panics because the formatter indexes element zero. Both fixes will add cases to parser_test.go. Describe how you would implement, verify, and commit both fixes. Do not modify files or create commits for this exercise.",
+      "expected_output": "A plan with two separate commits, one per independent bug, each containing its own fix and regression tests. Sharing source and test files does not justify combining the fixes. Relevant checks run for each commit, and the proposed order leaves each commit valid on top of its predecessors.",
+      "files": [],
+      "assertions": [
+        "The plan separates the two independent bug fixes into distinct commits despite shared files",
+        "Each fix stays in the same commit as its own regression tests",
+        "Each commit is checked independently on top of its predecessors rather than validating only the final combined tree",
+        "The response respects the planning-only request and does not modify files or create commits"
+      ]
     }
   ]
 }

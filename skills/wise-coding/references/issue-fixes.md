@@ -18,6 +18,9 @@ For new features and refactors without a correctness component, use the parent w
 For diagnosis-only requests, investigate and report the cause without implementing a fix.
 For performance regressions, use this flow when a concrete failing case can be reproduced.
 
+For multiple bugs, apply the parent's **One independent problem per commit** rule and run this
+sequence for each bug. Keep each bug's fix and regression tests together in its own commit.
+
 ## Prerequisites
 
 Use the repository's development and test tools. When reading a GitHub issue or publishing a PR

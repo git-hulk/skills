@@ -70,6 +70,14 @@ behavior, and the skill below exists to keep that order under time pressure.
   backwards produces a schema bent to fit a URL.
 - **Tests protect behavior, not lines.** A test per function is a maintenance tax that catches
   nothing; a test per behavior that must not change is insurance.
+- **One independent problem per commit.** When a request covers multiple problems, define
+  the commit boundaries before implementation and work through them in dependency order.
+  Never combine two independent bug fixes in one commit, even when they touch the same file.
+  Keep each fix with its regression tests and any documentation needed for that fix. Multiple
+  failing cases or call sites caused by the same underlying bug may belong in one commit.
+  Inspect each staged diff and run its relevant checks before committing; each commit should
+  be reviewable and pass those checks on top of its predecessors. Create commits only when
+  authorized by the user's request; otherwise report the intended commit split in the handoff.
 - **Separate logical sections inside functions.** Use one blank line between sections of a
   function body, such as validation, preparation, execution, and result handling. Keep closely
   related statements together, including an operation and its immediate error check. Apply the
@@ -126,6 +134,9 @@ Read the sibling's full bodies, not its signatures. Read `CLAUDE.md`, `AGENTS.md
 
 Write a short glossary of the concepts the change touches — existing ones first — then restate the
 request using only those concepts. This is where invented words get caught.
+
+For multiple independent problems, list the intended commits and the problem each addresses.
+Apply the workflow to each problem, preserving those boundaries through verification and delivery.
 
 | Concept | Meaning in this project | Defined at | Status |
 | --- | --- | --- | --- |
