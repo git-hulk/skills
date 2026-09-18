@@ -14,12 +14,13 @@ These pin a contract that is easy to break silently:
 | Contract | Test shape |
 | --- | --- |
 | API request / response shape | Table or golden test: given this request, the JSON body and status are exactly this. Includes the *absence* of fields you decided not to expose. |
-| Schema migration | Apply the migration to a database holding pre-change rows; assert the default value and that the old read path still works. |
+| Schema migration with a concrete compatibility risk | Apply the migration to pre-change rows and verify the at-risk behavior, such as a backfill preserving values or the old read path still working. A DDL change alone does not require a new test. |
 | Serialized / wire format | Round-trip: encode → decode → equal; and decode a fixture captured *before* the change. |
 | Parser or formatter | Input → AST → `String()` → same input (or a testdata golden file, if that is the repo's convention). |
 | Public interface behavior | Call through the exported method exactly as a user would; assert the documented guarantee (idempotency, error kind, ordering). |
 
-One test per contract. If the repo has a golden-file mechanism (`testdata/`, snapshots), add a
+Add a test only for a contract at risk that existing coverage does not protect. If the repo has
+a golden-file mechanism (`testdata/`, snapshots), add a
 case there rather than a new test function — that is where the maintainers will look.
 
 ### 2. Critical-implementation tests
@@ -43,6 +44,10 @@ per branch.
 - A test that reaches around the interface (queries the database directly to check what a
   service method wrote) when the interface can show the same thing.
 - A test whose only purpose is to lift coverage on a path with no risk.
+- A test that merely matches DDL text or restates table, column, or index definitions. Use the
+  repo's existing schema validation or migration checks; add a behavioral test only for a
+  concrete risk such as data loss, a backfill error, or changed query behavior.
+- A test duplicating behavior already protected by existing coverage.
 
 ## Placement and style
 
@@ -55,7 +60,7 @@ per branch.
 
 ## Sanity check before finishing
 
-Count the tests you added. Two to six is typical for a feature that spans storage, service, and
-API. If you have ten, list what each protects; any two that would both fail under the same bug
-are one test. If you have zero, you have either a pure refactor with existing coverage (say so)
-or a contract nobody is protecting.
+For each new test, identify the concrete failure it catches and why existing coverage does
+not catch it. Remove tests that only restate the implementation or duplicate existing coverage.
+There is no minimum test count: zero new tests is valid when existing tests or the repo's
+validation adequately cover the change. State that reason briefly and run the relevant checks.

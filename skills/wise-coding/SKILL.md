@@ -70,6 +70,14 @@ behavior, and the skill below exists to keep that order under time pressure.
   backwards produces a schema bent to fit a URL.
 - **Tests protect behavior, not lines.** A test per function is a maintenance tax that catches
   nothing; a test per behavior that must not change is insurance.
+- **One independent problem per commit.** When a request covers multiple problems, define
+  the commit boundaries before implementation and work through them in dependency order.
+  Never combine two independent bug fixes in one commit, even when they touch the same file.
+  Keep each fix with its regression tests and any documentation needed for that fix. Multiple
+  failing cases or call sites caused by the same underlying bug may belong in one commit.
+  Inspect each staged diff and run its relevant checks before committing; each commit should
+  be reviewable and pass those checks on top of its predecessors. Create commits only when
+  authorized by the user's request; otherwise report the intended commit split in the handoff.
 - **Separate logical sections inside functions.** Use one blank line between sections of a
   function body, such as validation, preparation, execution, and result handling. Keep closely
   related statements together, including an operation and its immediate error check. Apply the
@@ -126,6 +134,9 @@ Read the sibling's full bodies, not its signatures. Read `CLAUDE.md`, `AGENTS.md
 
 Write a short glossary of the concepts the change touches — existing ones first — then restate the
 request using only those concepts. This is where invented words get caught.
+
+For multiple independent problems, list the intended commits and the problem each addresses.
+Apply the workflow to each problem, preserving those boundaries through verification and delivery.
 
 | Concept | Meaning in this project | Defined at | Status |
 | --- | --- | --- | --- |
@@ -252,22 +263,26 @@ each extra item.
 
 ### 7. Tests
 
-Follow [`references/tests.md`](references/tests.md). Write tests in the order of what they
-protect:
+Follow [`references/tests.md`](references/tests.md). Add a test only for a concrete behavior
+or compatibility risk not already covered. Do not add tests merely because a file changed.
+When new tests are needed, prioritize:
 
 1. **Compatibility** — the contract a future change could break without noticing: the API
-   request/response shape (a golden or table test on the JSON), the migration applied to a
-   database that already has rows, the serialized or wire format, the public behavior of an
-   exported interface. One test per contract.
+   request/response shape (a golden or table test on the JSON), existing-data compatibility
+   when a migration puts it at risk, the serialized or wire format, the public behavior of an
+   exported interface. One test per uncovered contract at risk.
 2. **Critical implementation** — the logic that would fail in a *subtle* way: the state
    transition, the query with the tricky predicate, the boundary (zero value, expiry, ownership
    check). One test per risk, not per branch.
 3. **Nothing else.** No test for a getter, a constructor, a private helper, or a path that
-   simply delegates. No mocking of internal collaborators to observe calls.
+   simply delegates. No mocking of internal collaborators to observe calls. No tests that
+   merely match DDL text or restate table, column, or index definitions; test schema changes
+   only when they pose a concrete behavior or migration compatibility risk.
 
 Tests go where the repo puts them, use the repo's fixtures and assertion style, and read like
-specifications: `TestMutedFeedIsSkippedByScheduler`, not `TestMuteFeed`. A typical change adds
-two to six tests. Ten or more means you are testing paths, not behavior.
+specifications: `TestMutedFeedIsSkippedByScheduler`, not `TestMuteFeed`. There is no test-count
+target. Zero new tests is valid when existing coverage or the repo's validation already checks
+the change adequately; explain that briefly and run the relevant checks.
 
 ### 8. Verify and summarize
 
