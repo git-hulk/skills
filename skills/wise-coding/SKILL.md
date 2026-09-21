@@ -65,9 +65,13 @@ behavior, and the skill below exists to keep that order under time pressure.
   can — product behavior, naming trade-offs, backward-compatibility policy — interview them one
   question at a time with a recommended answer ([`references/grill.md`](references/grill.md))
   rather than guessing and hoping.
-- **Design each layer before implementing it, in dependency order.** Storage shapes the model,
-  the model shapes the service, the service shapes the API. Designing the API first and working
-  backwards produces a schema bent to fit a URL.
+- **Agree on behavior, then implement in dependency order.** Establish observable behavior and
+  compatibility requirements before choosing a schema. Then design and implement storage,
+  service/model, and transport in dependency order; each layer must support the agreed behavior.
+- **Simplification removes machinery.** Every new table, endpoint, background process, cache,
+  and consistency mechanism must support an agreed behavior. When the user simplifies the
+  design, remove work introduced solely for the discarded behavior and update the design
+  document. Do not retain it for possible future use or remove unrelated existing functionality.
 - **Tests protect behavior, not lines.** A test per function is a maintenance tax that catches
   nothing; a test per behavior that must not change is insurance.
 - **One independent problem per commit.** When a request covers multiple problems, define
@@ -93,25 +97,38 @@ sequence instead of the feature checklist below. If the user also requests TDD, 
 test-first order within the issue-fixing flow. Feature requests filed as issues use the regular
 workflow below; route by the requested behavior, not by whether an issue number exists.
 
-Copy this checklist into your reply and tick items as you go. Post each layer's design into the
-reply *before* writing its code; the design is what the user reviews, and it is the contract the
-next layer depends on.
+Use this checklist to track the work. For multi-step changes, share a brief plan and updates
+when decisions, findings, or completion status change; do not reproduce the full checklist on
+every turn. Before implementing a layer, describe material design choices that have not
+already been agreed. Reference an approved design instead of restating it.
 
 ```text
 Wise-coding progress: <change>
 - [ ] 0. Read the repo: layers, conventions, and the sibling feature
 - [ ] 1. Restate the change in the repo's vocabulary (new concepts justified)
-- [ ] 2. Confidence check → grill the user on what the code cannot answer
+- [ ] 2. Confirm behavior and compatibility → resolve remaining ambiguity
 - [ ] 3. Storage: design schema / key layout → implement store code   (skip if no state)
 - [ ] 4. Service: design interface + model → implement                 (skip if no domain logic)
 - [ ] 5. API: design HTTP/RPC protocol → implement handlers            (skip if not exposed)
 - [ ] 6. Export audit: everything private unless used elsewhere
 - [ ] 7. Tests: compatibility first, then critical behavior
-- [ ] 8. Verify with the repo's own build / lint / test, then summarize
+- [ ] 8. Verify the requested behavior through its entry point, then summarize
 ```
 
-Steps 3–5 are conditional. Say "no storage change" or "not exposed over an API" explicitly
-rather than silently skipping, so the reader knows you considered it.
+Steps 3–5 are conditional. Mention skipped layers when it clarifies the scope.
+
+### Carry decisions across turns
+
+Keep a compact working record of the agreed outcome, exact names, constraints, exclusions
+(including test exclusions), completed work, and next unfinished step. Update it when the
+user changes the design; keep any design document consistent with those decisions.
+
+On "continue," resume the next unfinished step within the authorized scope. Distinguish an
+explicitly requested intermediate milestone, such as "repositories first," from the complete
+feature. Do not expand a milestone-only request into integration work without authorization.
+Reopen a settled decision only when new evidence makes it incompatible with the requested
+behavior; explain the conflict. Earlier authorization persists, but does not authorize unrelated
+external actions. Check the current checkout and worktree before resuming edits.
 
 ### 0. Read the repo in detail
 
@@ -152,7 +169,12 @@ beside `Store` — stop; that is the most common way codebases rot.
 
 ### 2. Confidence check
 
-Before writing any design, answer these for yourself:
+Before choosing storage or implementation details, establish the requested observable behavior
+and compatibility constraints from the conversation and existing contracts. For example,
+"matching" needs defined equality semantics, and "last write wins" needs a defined write order
+and replacement behavior. Ask only about consequential ambiguity that remains unresolved.
+
+Then answer these for yourself:
 
 - Which files change in each layer, and which sibling do they mirror?
 - What is the storage representation, and is it compatible with existing rows / keys?
@@ -173,7 +195,8 @@ review comment; an assumption buried in code is a bug.
 
 ### 3. Storage: design, then implement
 
-Only if the change persists something. Design first, as text in the reply:
+Only if the change persists something. Use the approved design or describe the remaining
+storage choices before implementation:
 
 - **SQL**: the DDL of the migration (columns, types, nullability, defaults, indexes) and the
   queries the service will need. Check the migration convention (numbered files, an array of
@@ -193,8 +216,8 @@ not let transport structs leak downward.
 
 ### 4. Service interface and model: design, then implement
 
-Design the model change and the service signatures as code blocks in the reply before touching
-files. For each new or changed method write the signature and one line on what it guarantees:
+Design the model change and service signatures before implementation. If they are not already
+agreed, show the signatures and the guarantees that matter to callers:
 
 ```go
 // MuteFeed suppresses scheduling of feed until `until`; zero time clears the mute.
@@ -217,13 +240,13 @@ Rules that keep this layer honest:
 - **Model fields follow the sibling.** Same naming convention, same JSON / DB tags, same
   placement in the struct, same validation location.
 
-Implement only after the signatures are written down. If implementing changes your mind about a
-signature, update the design block in the reply and say why.
+Implement against the agreed signatures. If implementation requires a material change to a
+signature, update the design and explain why.
 
 ### 5. API protocol: design, then implement
 
-Only if the change is exposed over HTTP, gRPC, GraphQL, CLI, or an SDK. Design the protocol as a
-table in the reply before writing a handler:
+Only if the change is exposed over HTTP, gRPC, GraphQL, CLI, or an SDK. Use the approved protocol
+or describe outstanding choices before writing a handler; a table can make them easier to review:
 
 | Method + path (or RPC / command) | Request | Response | Errors | Auth |
 | --- | --- | --- | --- | --- |
@@ -238,6 +261,10 @@ The handler is a thin adapter: decode and validate the request, call the service
 encode the response. Business logic that appears in a handler belongs in step 4. Proto or
 OpenAPI files, if the repo keeps them, change in this step and generated code is regenerated
 with the repo's command, not hand-edited.
+
+Resolve consequential access-policy choices early. Inspect the actual middleware before
+describing a route group as authenticated. Follow the agreed access policy and existing
+authorization; do not invent a separate approval gate because a new endpoint is involved.
 
 ### 6. Export audit
 
@@ -258,8 +285,7 @@ Read every diff hunk with one question: *who calls this?* Apply
 - Exported constants, error variables, and types created just for the tests: make them private
   and test through the public behavior instead.
 
-List what remains exported in the summary. If the list is longer than the sibling's, explain
-each extra item.
+Summarize material additions to the exported contract and their callers when relevant to review.
 
 ### 7. Tests
 
@@ -283,22 +309,26 @@ Tests go where the repo puts them, use the repo's fixtures and assertion style, 
 specifications: `TestMutedFeedIsSkippedByScheduler`, not `TestMuteFeed`. There is no test-count
 target. Zero new tests is valid when existing coverage or the repo's validation already checks
 the change adequately; explain that briefly and run the relevant checks.
+Honor explicit test exclusions and cover integration boundaries that component tests cannot
+verify. Choose tests according to distinct failure risks, not a target count.
 
 ### 8. Verify and summarize
 
-Run what the repo runs — `Makefile` targets, the CI workflow's commands, the linter — and
-report results verbatim, including failures you could not fix. Then end with:
+Trace the requested behavior from its real entry point through registration, dependency
+construction, persistence where applicable, and the returned result. Verify that path at the
+requested scope: repository tests can complete a repository milestone, but isolated handler
+tests cannot establish that a feature is reachable through the application. Include generated
+or bundled artifacts needed for the normal entry point to use the change.
 
-```markdown
-## Summary
-**Assumptions** (if any): …
-**Concepts**: existing concepts reused; new concepts and why.
-**Changed by layer**: storage → service/model → API, each with files.
-**Exported surface added**: <symbol> — used by <caller>. (Should be short.)
-**Tests added**: <name> — protects <contract or behavior>.
-**Verification**: commands run and their result.
-**Open questions**: what only the user or maintainers can settle.
-```
+Run the repository's required build, lint, and test commands. Use isolated dependencies when
+integration tests mutate shared state. Report commands and outcomes accurately, including
+failures, skipped integration checks, or cached results that limit the verification claim.
+Repeat checks when changes or unresolved failures justify it.
+
+Finish with the behavior delivered, meaningful verification, and remaining work or limitations.
+Distinguish implemented components, usable local behavior, and deployment status. Include
+assumptions, files, or contract details only where they help assess the result; no fixed summary
+template is required. Do not claim the whole feature is complete when only a milestone is done.
 
 ## Reference files
 
