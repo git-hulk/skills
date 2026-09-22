@@ -5,6 +5,9 @@ without the test*. Tests that fail whenever the implementation is refactored, bu
 behavior is wrong, are worse than none: they train people to update tests without reading them.
 So the unit of testing is a behavior a caller relies on, not a function.
 
+Carry explicit test exclusions forward across turns. Choose cases from the agreed behavior and
+distinct failure risks; the examples below are options, not requirements to add every category.
+
 ## Two kinds of tests worth adding
 
 ### 1. Compatibility tests
@@ -56,7 +59,10 @@ per branch.
 - Name the behavior: `TestMutedFeedIsSkippedByScheduler`, `test_migration_rejected_when_readonly`,
   `it('leaves mute unchanged when PUT omits mute_until')`.
 - Integration tests that need a real database or service: reuse the repo's harness (docker
-  compose, test container, build tag). Do not introduce a second harness.
+  compose, test container, build tag) with isolated state when tests mutate data. Do not
+  introduce a second harness.
+- Verify the real entry point when delivery includes application integration. Direct handler
+  calls can test response behavior but cannot establish route registration or dependency wiring.
 
 ## Sanity check before finishing
 
@@ -64,3 +70,7 @@ For each new test, identify the concrete failure it catches and why existing cov
 not catch it. Remove tests that only restate the implementation or duplicate existing coverage.
 There is no minimum test count: zero new tests is valid when existing tests or the repo's
 validation adequately cover the change. State that reason briefly and run the relevant checks.
+
+Preserve checks of different integration boundaries even when they can fail under the same bug.
+Report material gaps and whether integration checks ran, were skipped, or used cached results;
+do not present all three as fresh verification.

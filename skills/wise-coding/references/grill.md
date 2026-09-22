@@ -13,6 +13,11 @@ things you can look up (where the router is, what the error type is called). Do 
 every answer is already clear from the request plus the sibling — an unnecessary interview is
 as annoying as a wrong guess.
 
+Check the working decision record and prior user instructions first. A new turn or "continue"
+does not reopen settled choices. If new evidence creates a real conflict, explain it and ask
+only about the affected decision. An approved design can differ from existing code because
+changing that behavior is the task.
+
 ## Build the question tree first
 
 Roots are decisions that change the shape of the whole change; branches are per-layer choices;
@@ -44,18 +49,20 @@ Then wait. The user's reply steers:
 - **Agrees** → resolve the node, update the design block in the reply, move on.
 - **Refines** → update the design, re-check dependent nodes (a storage change can invalidate an
   API answer), continue.
-- **Contradicts the code** ("just add it to the users table" when the sibling uses a separate
-  table) → show the code and the consequence, then ask again. Do not proceed while the design
-  and the codebase disagree.
+- **Conflicts with an established constraint** → show the constraint and consequence. Ask only
+  if the user's instructions do not already resolve the tradeoff; a difference from the sibling
+  alone is not a reason to ask again.
 - **Asks a question back** → answer from the code, return to the same node.
-- **"Just do it"** → take every recommended answer, list them under **Assumptions**, proceed.
+- **"Just do it"** → proceed within the authorized scope using reasonable implementation
+  choices and state material assumptions. This does not grant permission for unrelated actions.
+- **"Continue"** → resume the next unfinished step using settled decisions and authorization;
+  do not restart the interview or treat it as approval for unrelated scope.
 
-Keep a checklist of branches visible so both of you see what is left. Resolve roots before
-leaves; a root reversal throws away leaf answers.
+Track unresolved branches and share those that affect progress. Resolve roots before leaves;
+a root reversal throws away leaf answers.
 
 ## When nobody can answer
 
-Batch runs, `-p`, and subagents have no user. Take the recommended answer for every node, write
-the whole tree — question, choice, why — under an **Assumptions** heading at the top of the
-reply, and proceed. A reader can reverse a stated assumption in one review comment; an
-unstated one they discover in production.
+In batch runs or delegated work without a user to answer, preserve agreed decisions and choose
+the most conservative implementation within scope. Report only material assumptions and their
+effect; do not turn a missing reply into authorization for an action that requires approval.
