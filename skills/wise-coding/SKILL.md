@@ -51,9 +51,10 @@ behavior, and the skill below exists to keep that order under time pressure.
 - **Packages and modules are orthogonal.** Give each one a distinct responsibility and avoid
   overlapping contracts, circular dependencies, or parallel implementations of the same
   concept. Prefer extending the existing owner over creating a competing boundary.
-- **Search before adding shared code.** Search the repository for an existing helper or common
-  function with the same responsibility before creating one. Reuse or extend it when it fits,
-  and merge overlapping helpers when their semantics and ownership are compatible.
+- **Reuse before reimplementing.** Check the language's standard library and the repository's
+  existing helpers before writing common behavior from scratch. Prefer a standard-library
+  facility when it meets the need; otherwise reuse or extend a repository helper whose semantics
+  and ownership fit. Avoid overlapping custom implementations.
 - **Surface area is a contract.** Method parameters, return types, interface methods, and API
   fields are the protocol between you and every caller. Private by default; export only what
   another package or client uses *now*, not what someone might want later.
