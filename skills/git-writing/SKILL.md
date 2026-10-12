@@ -25,8 +25,8 @@ unless the user separately asks for those actions.
 - **One message for the PR and commit.** Draft one subject and body. Use the subject as the PR
   title and the exact body as the PR summary, including verification and issue references. Do not
   expand, shorten, or rephrase one independently; apply revisions to both.
-- **Lead with the outcome.** Titles and subjects name the primary observable change. Put supporting
-  implementation details in the body rather than joining several changes into the first line.
+- **Lead with the outcome.** Titles and subjects name the primary observable change. Describe
+  the solution or design in the body without implementation details.
 - **Explain cause and effect.** Prefer current behavior → problem or root cause → change →
   resulting behavior. A list of edited files is not a summary.
 - **Concrete evidence earns space.** Include a short before/after example, command output, error, or
@@ -44,7 +44,7 @@ Before drafting, determine:
 1. The user-visible or maintainer-visible outcome.
 2. The previous behavior and why it was insufficient.
 3. The root cause, when known and relevant.
-4. The smallest accurate description of the implementation.
+4. The solution or design and its observable effect, without implementation details.
 5. Compatibility, migration, operational, or performance consequences.
 6. The verification actually performed.
 7. Related issue numbers or links supplied by the repository or user.
@@ -72,26 +72,20 @@ and PR remain identical. Do not add empty sections or duplicate the subject in t
 Use this default structure for the shared body:
 
 ```text
-<Concise summary in commit-message style: explain what changed and why.
-Wrap prose at about 72 characters, separating paragraphs with blank lines.>
+<1-3 sentences describing the motivation, including concise background
+context and why the change is needed.>
 
-Before applying this PR:
+<Describe the solution or design without implementation details.>
 
-<Describe the current behavior and the conditions that trigger the bug.>
-
-After this PR:
-
-<Describe the corrected behavior under the same conditions.>
+<Optional: other things reviewers need to know.>
 
 Assistant-By <MODEL>
 ```
 
-Start directly with the summary, without a heading. Include `Before applying this PR:` and
-`After this PR:` only for bug fixes; omit both for other changes. Use concrete examples or short
-code blocks when they clarify the behavior. Keep other important reviewer context in the final
-`Other important things to notice:` section; omit it when there is nothing material to add.
-If both artifacts are requested, write a concise shared body; a commit-only request may still
-use a subject alone.
+Start directly with the motivation, without a heading. Motivation and solution are mandatory,
+including for commit-only requests. For bug fixes, explain the previous and corrected behavior
+within those paragraphs. Include verification, issue references, or other reviewer context only
+when material and supported by evidence; omit the optional paragraph otherwise.
 
 ## Commit message
 
@@ -100,20 +94,18 @@ Use this format unless the repository has stricter requirements:
 ```text
 Short summary of the change, 70 characters or fewer
 
-More detailed explanatory text when necessary, wrapped at about 72
-characters. Explain the reason for the change and any behavior that is
-not obvious from the subject.
+1-3 sentences describing the motivation, including concise background
+context and why the change is needed.
 
-Further paragraphs follow after blank lines.
+Describe the solution or design without implementation details.
 
-  - Bullets are acceptable when they make distinct points clearer.
-
-  - Keep the indentation and spacing consistent.
+Optional: other things reviewers need to know.
 ```
 
 Rules:
 
-- The subject is mandatory; the body is optional.
+- The subject and body are mandatory. The body must include motivation and solution;
+  other reviewer context is optional.
 - Separate the subject and body with exactly one blank line.
 - Write the subject in imperative mood when repository history does not establish another style.
 - Do not end the subject with a period.
