@@ -5,8 +5,9 @@ description: >
   read the repo in detail first, reuse its vocabulary instead of inventing concepts, run a grill-me
   style interview when a decision is not obvious from the code, then design and build in
   dependency order — storage schema, service interface and model, HTTP/RPC protocol — keeping
-  every exported symbol, parameter, and endpoint to the minimum callers actually use, and adding
-  only the few tests that protect behavior and compatibility. Use this whenever the user asks to
+  every exported symbol, parameter, and endpoint to the minimum callers actually use. Do not add
+  test cases for features; keep bug regression tests focused on observable behavior. Use this
+  whenever the user asks to
   add, implement, build, support, wire up, extend, or expose something in a repo they already
   have — a feature, a field, an endpoint, a table, a CLI flag, a library capability, a refactor —
   especially across database, service, and API layers. For bugs, panics, hangs, or regressions, use the
@@ -20,7 +21,7 @@ Code added to a repository is judged by how invisible it is: it reads like the c
 uses the words the project already uses, and exposes nothing the rest of the system does not
 call. Every exported function, every parameter, every endpoint is a promise you make on the
 maintainers' behalf, and promises are cheap to make and expensive to withdraw. So the order of
-work is read → name → decide → design each layer → implement it → audit the surface → test the
+work is read → name → decide → design each layer → implement it → audit the surface → verify the
 behavior, and the skill below exists to keep that order under time pressure.
 
 ## Don't trigger for
@@ -50,9 +51,10 @@ behavior, and the skill below exists to keep that order under time pressure.
 - **Packages and modules are orthogonal.** Give each one a distinct responsibility and avoid
   overlapping contracts, circular dependencies, or parallel implementations of the same
   concept. Prefer extending the existing owner over creating a competing boundary.
-- **Search before adding shared code.** Search the repository for an existing helper or common
-  function with the same responsibility before creating one. Reuse or extend it when it fits,
-  and merge overlapping helpers when their semantics and ownership are compatible.
+- **Reuse before reimplementing.** Check the language's standard library and the repository's
+  existing helpers before writing common behavior from scratch. Prefer a standard-library
+  facility when it meets the need; otherwise reuse or extend a repository helper whose semantics
+  and ownership fit. Avoid overlapping custom implementations.
 - **Surface area is a contract.** Method parameters, return types, interface methods, and API
   fields are the protocol between you and every caller. Private by default; export only what
   another package or client uses *now*, not what someone might want later.
@@ -72,8 +74,9 @@ behavior, and the skill below exists to keep that order under time pressure.
   and consistency mechanism must support an agreed behavior. When the user simplifies the
   design, remove work introduced solely for the discarded behavior and update the design
   document. Do not retain it for possible future use or remove unrelated existing functionality.
-- **Tests protect behavior, not lines.** A test per function is a maintenance tax that catches
-  nothing; a test per behavior that must not change is insurance.
+- **Do not add test cases for features.** Run existing checks and verify the requested behavior
+  through its entry point. For bug fixes, add only the minimal regression test that protects
+  the observable behavior or public surface, not a test for each line or function.
 - **One independent problem per commit.** When a request covers multiple problems, define
   the commit boundaries before implementation and work through them in dependency order.
   Never combine two independent bug fixes in one commit, even when they touch the same file.
@@ -111,7 +114,7 @@ Wise-coding progress: <change>
 - [ ] 4. Service: design interface + model → implement                 (skip if no domain logic)
 - [ ] 5. API: design HTTP/RPC protocol → implement handlers            (skip if not exposed)
 - [ ] 6. Export audit: everything private unless used elsewhere
-- [ ] 7. Tests: compatibility first, then critical behavior
+- [ ] 7. Tests: add no feature cases; run existing checks
 - [ ] 8. Verify the requested behavior through its entry point, then summarize
 ```
 
@@ -289,28 +292,11 @@ Summarize material additions to the exported contract and their callers when rel
 
 ### 7. Tests
 
-Follow [`references/tests.md`](references/tests.md). Add a test only for a concrete behavior
-or compatibility risk not already covered. Do not add tests merely because a file changed.
-When new tests are needed, prioritize:
-
-1. **Compatibility** — the contract a future change could break without noticing: the API
-   request/response shape (a golden or table test on the JSON), existing-data compatibility
-   when a migration puts it at risk, the serialized or wire format, the public behavior of an
-   exported interface. One test per uncovered contract at risk.
-2. **Critical implementation** — the logic that would fail in a *subtle* way: the state
-   transition, the query with the tricky predicate, the boundary (zero value, expiry, ownership
-   check). One test per risk, not per branch.
-3. **Nothing else.** No test for a getter, a constructor, a private helper, or a path that
-   simply delegates. No mocking of internal collaborators to observe calls. No tests that
-   merely match DDL text or restate table, column, or index definitions; test schema changes
-   only when they pose a concrete behavior or migration compatibility risk.
-
-Tests go where the repo puts them, use the repo's fixtures and assertion style, and read like
-specifications: `TestMutedFeedIsSkippedByScheduler`, not `TestMuteFeed`. There is no test-count
-target. Zero new tests is valid when existing coverage or the repo's validation already checks
-the change adequately; explain that briefly and run the relevant checks.
-Honor explicit test exclusions and cover integration boundaries that component tests cannot
-verify. Choose tests according to distinct failure risks, not a target count.
+Follow [`references/tests.md`](references/tests.md). Do not add test cases while implementing a
+feature, including new rows in existing test tables. Run the relevant existing tests and verify
+the feature through its real entry point. For bug fixes, follow the regression-test guidance in
+[`references/issue-fixes.md`](references/issue-fixes.md): protect the smallest observable behavior
+or public contract that reproduces the bug, without testing each line or private helper.
 
 ### 8. Verify and summarize
 
@@ -338,4 +324,4 @@ template is required. Do not claim the whole feature is complete when only a mil
 | [`references/reading.md`](references/reading.md) | Step 0 — reading for a change: layers, conventions, sibling trace, subagent brief |
 | [`references/grill.md`](references/grill.md) | Step 2 — building the question tree and running the interview |
 | [`references/export-surface.md`](references/export-surface.md) | Steps 4 and 6 — minimal-export rules, helper test, per-language visibility mechanics |
-| [`references/tests.md`](references/tests.md) | Step 7 — choosing the few tests that matter, with examples |
+| [`references/tests.md`](references/tests.md) | Step 7 — feature verification and minimal bug regression tests |

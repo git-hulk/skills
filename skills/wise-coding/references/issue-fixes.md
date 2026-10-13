@@ -116,6 +116,9 @@ Add a test that:
 - Would fail if the fix were reverted. Mentally revert the diff and walk through the test
   — if it still passes, the test doesn't anchor the bug.
 
+Keep the case at the affected behavior or public surface. Do not add cases for each changed
+line, branch, or private helper.
+
 For **hang-class** bugs, run the lexer/parser in a goroutine and `t.Fatalf` on timeout. The
 test suite must fail *fast* on regression, not hang.
 
