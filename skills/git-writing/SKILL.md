@@ -2,7 +2,7 @@
 name: git-writing
 description: >
   Write or revise pull request titles and summaries and Git commit messages from the actual
-  change, its motivation, and its verification. Use when the user asks for a PR title, PR
+  change and its motivation. Use when the user asks for a PR title, PR
   description, PR summary, commit subject, commit message, or wants existing Git prose made
   clearer. Follow repository-specific templates and conventions when present; otherwise use a
   single message shared by the PR and commit: a subject of at most 70 characters and a body
@@ -13,7 +13,7 @@ description: >
 # Git Writing
 
 Turn a change into reviewable prose. A reader should understand what was wrong or missing, why it
-matters, what changed, and how the result was verified without reconstructing the story from the
+matters, and what changed without reconstructing the story from the
 diff. Generate text only; do not create commits, push branches, or open or update pull requests
 unless the user separately asks for those actions.
 
@@ -23,19 +23,21 @@ unless the user separately asks for those actions.
   tests, and repository templates before writing. Do not invent motivation, impact, compatibility,
   test results, issue links, or implementation details.
 - **One message for the PR and commit.** Draft one subject and body. Use the subject as the PR
-  title and the exact body as the PR summary, including verification and issue references. Do not
+  title and the exact body as the PR summary, including issue references. Do not
   expand, shorten, or rephrase one independently; apply revisions to both.
+- **Keep verification internal.** Do not include checks performed, verification commands, or
+  test results in commit messages or PR summaries. Use that evidence only to ground claims.
 - **Lead with the outcome.** Titles and subjects name the primary observable change. Describe
   the solution or design in the body without implementation details.
 - **Explain cause and effect.** Prefer current behavior → problem or root cause → change →
   resulting behavior. A list of edited files is not a summary.
-- **Concrete evidence earns space.** Include a short before/after example, command output, error, or
+- **Concrete evidence earns space.** Include a short before/after example, error, or
   scenario when it makes the failure and correction easier to verify.
 - **Repository rules come first.** Follow an existing PR template, contribution guide, required
   sections, issue syntax, or commit prefix. Apply the defaults below only where the repository is
   silent.
 - **Keep claims proportional.** Say "fixes" only when the evidence establishes the fix; otherwise
-  use "addresses", "changes", or "is intended to" and name what was actually verified.
+  use "addresses", "changes", or "is intended to" and limit claims to the available evidence.
 
 ## Gather the change story
 
@@ -46,7 +48,7 @@ Before drafting, determine:
 3. The root cause, when known and relevant.
 4. The solution or design and its observable effect, without implementation details.
 5. Compatibility, migration, operational, or performance consequences.
-6. The verification actually performed.
+6. The verification actually performed, for grounding claims internally only.
 7. Related issue numbers or links supplied by the repository or user.
 
 If the evidence cannot answer a material point, omit it or label it as an assumption. Do not ask
@@ -65,7 +67,7 @@ for information that the repository or diff can provide.
 ## Pull request summary
 
 Use the commit message body verbatim, excluding the subject and its separating blank line.
-Preserve wording, paragraph order, headings, line wrapping, verification, and trailers. When a
+Preserve wording, paragraph order, headings, line wrapping, and trailers. When a
 repository requires a PR template, apply its required sections to the shared body so the commit
 and PR remain identical. Do not add empty sections or duplicate the subject in the summary.
 
@@ -73,7 +75,9 @@ Use this default structure for the shared body:
 
 ```text
 <1-3 sentences describing the motivation, including concise background
-context and why the change is needed.>
+context and why the change is needed; include the root cause for bug fixes.>
+
+<Bug fixes only: explain how the bug happened, without a heading or prefix.>
 
 <Describe the solution or design without implementation details.>
 
@@ -83,9 +87,13 @@ Assistant-By <MODEL>
 ```
 
 Start directly with the motivation, without a heading. Motivation and solution are mandatory,
-including for commit-only requests. For bug fixes, explain the previous and corrected behavior
-within those paragraphs. Include verification, issue references, or other reviewer context only
-when material and supported by evidence; omit the optional paragraph otherwise.
+including for commit-only requests. For bug fixes, explain the root cause and previous behavior
+in the motivation paragraph. Immediately follow it with an unheaded paragraph explaining the
+circumstances or sequence that led to the failure, then describe the corrected behavior in the
+solution paragraph. Omit this explanation for other changes. If the root cause or how the bug
+arose is not established, say so rather than inventing an explanation or introduction history.
+Include issue references or other reviewer context only when material and supported by evidence;
+omit the optional paragraph otherwise.
 
 ## Commit message
 
@@ -95,7 +103,9 @@ Use this format unless the repository has stricter requirements:
 Short summary of the change, 70 characters or fewer
 
 1-3 sentences describing the motivation, including concise background
-context and why the change is needed.
+context and why the change is needed; include the root cause for bug fixes.
+
+<Bug fixes only: explain how the bug happened, without a heading or prefix.>
 
 Describe the solution or design without implementation details.
 

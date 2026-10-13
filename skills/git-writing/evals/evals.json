@@ -5,19 +5,20 @@
       "id": 0,
       "name": "bug-fix-pr-and-commit",
       "prompt": "Write a PR title, PR summary, and commit message for this change: after loading cluster nodes from a local file, the parser retained each node's address but discarded its node ID. Matching then fell back to IP and port, which fails when the node listens on 0.0.0.0 but clients see 127.0.0.1. The change now assigns the parsed ID. Before the fix, CLUSTER NODES omitted the myself flag after restart; afterward it includes myself. Tests covering reload and node matching pass. Related issue: #1381.",
-      "expected_output": "A concise fix-oriented PR title; a PR summary starting with 1-3 sentences of motivation describing the restart context and why address-based matching fails, followed by the solution at a behavioral level without implementation details, and reviewer context containing passing tests and #1381; and a commit message with the same subject and body, a subject of at most 70 characters, a blank line, and body prose wrapped at about 72 characters. Explain concrete before/after behavior without inventing details.",
+      "expected_output": "A concise fix-oriented PR title; a PR summary starting with 1-3 sentences of motivation describing the restart context and root cause, immediately followed by an unheaded paragraph explaining how reload, lost node identity, and differing bind and client addresses lead to the missing myself flag; then the solution at a behavioral level without implementation details, and reviewer context containing #1381; and a commit message with the same subject and body, a subject of at most 70 characters, a blank line, and body prose wrapped at about 72 characters. Explain concrete before/after behavior without inventing introduction history or reporting verification commands, checks performed, or test results.",
       "files": [],
       "assertions": [
         "PR title names the node ID reload or matching fix and is at most 70 characters",
         "PR summary explains why IP and port fallback fails for 0.0.0.0 versus 127.0.0.1",
-        "PR summary opens with 1-3 sentences of motivation including concise background context and why the change is needed, without a summary heading",
+        "PR summary opens with 1-3 sentences of motivation including concise background context, why the change is needed, and the root cause: discarded node IDs force address-based matching after reload",
+        "An unheaded paragraph immediately follows the motivation and root cause, before the solution, and explains the reload-to-address-mismatch failure sequence without a prefix or invented introduction history",
         "The solution paragraph explains restored node identity and the myself flag after restart without narrating assignments or other implementation details",
-        "Reviewer context includes the passing reload and matching tests and #1381",
+        "Reviewer context includes #1381 without mentioning the passing tests, verification commands, or checks performed",
         "Commit subject is at most 70 characters and has no trailing period",
         "Commit body is separated from the subject by a blank line and wraps near 72 characters",
         "No tests or implementation details are invented",
         "PR title is identical to the commit subject",
-        "PR summary is identical to the commit body, including wording, line wrapping, verification, and issue references"
+        "PR summary is identical to the commit body, including wording, line wrapping, and issue references"
       ]
     },
     {
@@ -31,19 +32,20 @@
         "Subject is at most 70 characters and has no trailing period",
         "Body includes 1-3 motivation sentences with context and why, followed by a solution paragraph without implementation details",
         "Optional reviewer context is omitted when there is nothing material to add",
+        "The paragraph explaining how the bug happened is omitted because this is not a bug fix",
         "No test result or behavior change is invented"
       ]
     },
     {
       "id": 2,
       "name": "repository-template-takes-precedence",
-      "prompt": "Draft a PR title, summary, and commit message for a repository whose CONTRIBUTING.md requires titles beginning with [storage] and a PR body with Motivation, Changes, and Testing sections. The patch adds a timeout to snapshot uploads so stalled requests release their worker. An integration test that holds the server response open now confirms the request times out and the worker accepts the next upload.",
-      "expected_output": "A title beginning with [storage], followed by the required Motivation, Changes, and Testing sections. The prose should explain the stalled-worker problem, timeout behavior, and observed integration test without adding unrelated sections. The commit subject matches the PR title, and the commit body matches the PR summary exactly, including the required headings.",
+      "prompt": "Draft a PR title, summary, and commit message for a repository whose CONTRIBUTING.md requires titles beginning with [storage] and a PR body with Motivation and Changes sections. The patch adds a timeout to snapshot uploads so stalled requests release their worker. An integration test that holds the server response open now confirms the request times out and the worker accepts the next upload.",
+      "expected_output": "A title beginning with [storage], followed by the required Motivation and Changes sections. The prose should explain the stalled-worker problem and timeout behavior without reporting the integration test or adding unrelated sections. The commit subject matches the PR title, and the commit body matches the PR summary exactly, including the required headings.",
       "files": [],
       "assertions": [
         "PR title begins with [storage]",
-        "Summary contains Motivation, Changes, and Testing sections",
-        "Summary explains the problem, change, and verified result",
+        "Summary contains Motivation and Changes sections",
+        "Summary explains the problem and solution without mentioning the integration test or verification details",
         "Commit subject matches the PR title and commit body matches the PR summary exactly, including template headings; no empty section is included"
       ]
     }
