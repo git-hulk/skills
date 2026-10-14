@@ -21,6 +21,18 @@ comments only for findings the human selects for posting in step 5.
   pre-existing defects as new findings; compare the base version when attribution is unclear.
 - Prioritize correctness, security, data integrity, compatibility, and reliability. Report a
   performance issue only with a concrete workload and a defensible cost or measured regression.
+- For API, database schema, and interface changes, compare analogous existing definitions and
+  consumers. Check orthogonality: responsibilities should be distinct and compose without
+  redundant or overlapping capabilities. Check naming and design patterns for consistency with
+  existing conventions; require a concrete justification for deviations.
+- For bug fixes, trace the root cause into analogous code paths and verify that all affected
+  occurrences within the fix's intended scope are addressed. Report reachable remaining
+  occurrences as gaps in the fix, even when they predate the patch; do not expand this into an
+  audit of unrelated defects.
+- Check that added tests focus on critical observable behavior: the regression being fixed,
+  important boundaries, and meaningful failure cases. Flag redundant or implementation-coupled
+  cases added merely to cover every line; recommend the smallest set that protects the contract,
+  rather than a line-coverage target. A missing test alone does not prove a bug.
 - Follow applicable repository instructions and documented contracts. Where the repository is
   silent, use Uber's Go Style Guide, Google's C++ Style Guide, and Roblox's Lua Style Guide through
   the language references, respecting their runtime and host applicability.
