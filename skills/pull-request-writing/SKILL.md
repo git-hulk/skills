@@ -1,5 +1,5 @@
 ---
-name: git-writing
+name: pull-request-writing
 description: >
   Write or revise pull request titles and summaries and Git commit messages from the actual
   change and its motivation. Use when the user asks for a PR title, PR
@@ -10,7 +10,7 @@ description: >
   documentation.
 ---
 
-# Git Writing
+# Pull Request Writing
 
 Turn a change into reviewable prose. A reader should understand what was wrong or missing, why it
 matters, and what changed without reconstructing the story from the

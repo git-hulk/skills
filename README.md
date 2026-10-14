@@ -27,7 +27,7 @@ covers:
 The generated report is saved as `<repo-name>.md` in the current working directory unless another
 location is requested.
 
-### [Git Writing](skills/git-writing/SKILL.md)
+### [Pull Request Writing](skills/pull-request-writing/SKILL.md)
 
 Write factual, reviewable pull request titles and summaries and Git commit messages. The workflow
 derives the change story from repository evidence, explains cause and effect, follows local
@@ -59,7 +59,7 @@ Example requests:
 ```text
 Use fast-learning to help me understand this repository.
 
-Use git-writing to draft the PR title, summary, and commit message for this change.
+Use pull-request-writing to draft the PR title, summary, and commit message for this change.
 
 Use wise-coding to add this feature while following the repository's existing design.
 ```
