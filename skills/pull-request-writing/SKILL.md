@@ -17,6 +17,24 @@ matters, and what changed without reconstructing the story from the
 diff. Generate text only; do not create commits, push branches, or open or update pull requests
 unless the user separately asks for those actions.
 
+## Fork branches for authorized Git operations
+
+When the user authorizes branch creation, pushing, or PR publication:
+
+- Create the working branch locally from the intended base, and create or push its remote
+  branch only in the user's fork. Never create or push change branches in the upstream
+  repository, even when the user has write access there.
+- Verify the repository owner, fork relationship, and actual push URL before publishing.
+  Do not assume `origin` is the fork or `upstream` is the source; remote names are not evidence.
+- Explicitly select the verified fork as the push destination for both initial and subsequent
+  pushes. Use the fork's owner and branch as the PR head, and the intended target repository
+  and branch as its base; targeting upstream does not make upstream the push destination.
+- Apply this rule to every branch in a stacked PR workflow, including `gh stack` submission.
+  Check the tool's push destination before submitting; never fall back to publishing branches
+  in upstream to work around a tooling limitation.
+- If a usable user fork cannot be established, stop before remote branch creation or pushing
+  and explain what is missing. Drafting text alone does not authorize these Git operations.
+
 ## Principles
 
 - **Evidence before prose.** Read the relevant diff, status, recent history, issue or request,
