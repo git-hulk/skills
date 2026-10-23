@@ -9,7 +9,7 @@ description: >
   test cases for features; keep bug regression tests focused on observable behavior. Use this
   whenever the user asks to
   add, implement, build, support, wire up, extend, or expose something in a repo they already
-  have — a feature, a field, an endpoint, a table, a CLI flag, a library capability, a refactor —
+  have — a feature, endpoint, table, CLI flag, library capability, refactor, or performance improvement —
   especially across database, service, and API layers. For bugs, panics, hangs, or regressions, use the
   bundled issue-fixes workflow to reproduce, diagnose, fix, and regression-test the failure.
   Also for "写代码 / 实现这个功能 / 加个接口 / 加个字段 / 修复问题".
@@ -100,6 +100,9 @@ sequence instead of the feature checklist below. If the user also requests TDD, 
 test-first order within the issue-fixing flow. Feature requests filed as issues use the regular
 workflow below; route by the requested behavior, not by whether an issue number exists.
 
+For performance improvements, apply the [benchmark loop](#performance-improvements) alongside
+the applicable workflow. Performance regressions also follow the issue-fixing sequence above.
+
 Use this checklist to track the work. For multi-step changes, share a brief plan and updates
 when decisions, findings, or completion status change; do not reproduce the full checklist on
 every turn. Before implementing a layer, describe material design choices that have not
@@ -119,6 +122,29 @@ Wise-coding progress: <change>
 ```
 
 Steps 3–5 are conditional. Mention skipped layers when it clarifies the scope.
+
+### Performance improvements
+
+1. **Measure the baseline using the existing method.** Before changing code, run the repository's
+   existing performance tests or benchmark scripts. Record the command, workload, relevant
+   environment, and results. Establish the target metric and expected improvement from the
+   request or repository guidance; if neither defines a target, state a measurable goal before
+   optimizing. If no suitable measurement exists, resolve how to measure before proceeding.
+2. **Improve and rerun the benchmark.** Use measurements or profiling to identify the bottleneck,
+   make a focused change that preserves behavior, then rerun the same benchmark with the same
+   workload and comparable environment. Use the existing comparison tooling and repeat runs
+   as needed to distinguish improvements from noise.
+3. **Compare and iterate.** Compare results against the baseline and target, including regressions
+   in relevant metrics. If performance falls short, inspect the evidence, revise the approach,
+   and rerun the benchmark. Remove ineffective changes. Continue until the target is met or
+   a concrete blocker or lack of further evidence-backed improvements prevents progress;
+   report any unmet target explicitly.
+
+Do not sacrifice human readability or maintainability for speed. Keep names, control flow,
+and abstractions clear and consistent with the repository; revise an optimization that makes
+the code harder to understand, then benchmark again. Passing correctness checks alone does
+not establish a performance improvement. Finish with the baseline, final measurements,
+comparison, benchmark command, and relevant correctness-check results.
 
 ### Carry decisions across turns
 
