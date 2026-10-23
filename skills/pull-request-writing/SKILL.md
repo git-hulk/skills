@@ -17,6 +17,20 @@ matters, and what changed without reconstructing the story from the
 diff. Generate text only; do not create commits, push branches, or open or update pull requests
 unless the user separately asks for those actions.
 
+## Branch names
+
+When suggesting a branch name or creating one as part of authorized Git operations, use
+`<type>/<short-description>`:
+
+- Bug fix: `fix/restore-node-id-on-reload`
+- New feature: `feature/add-snapshot-uploads`
+- Improvement: `improvement/reduce-snapshot-memory`
+
+Use a concise, lowercase, hyphen-separated description of the actual change. Avoid vague names
+such as `update` or `changes`. Do not include tool or agent names such as `codex` or `claude`
+anywhere in the branch name, including prefixes like `codex/fix/...` or `claude/feature/...`.
+Apply this convention to every branch in a stacked PR workflow.
+
 ## Fork branches for authorized Git operations
 
 When the user authorizes branch creation, pushing, or PR publication:
