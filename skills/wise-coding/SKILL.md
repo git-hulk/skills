@@ -150,6 +150,10 @@ the project (that is `fast-learning`) but three specific things:
 Read the sibling's full bodies, not its signatures. Read `CLAUDE.md`, `AGENTS.md`,
 `CONTRIBUTING.md`, and the linter config, because they encode rules the code alone does not show.
 
+When a convention depends on deployment context, look up its purpose or ask the maintainer.
+Put the confirmed reason beside the code when it would otherwise be easy to miss. For example,
+a header may select an environment's schema because several environments share one router.
+
 ### 1. Restate the change in the repo's vocabulary
 
 Write a short glossary of the concepts the change touches — existing ones first — then restate the
@@ -176,6 +180,18 @@ Before choosing storage or implementation details, establish the requested obser
 and compatibility constraints from the conversation and existing contracts. For example,
 "matching" needs defined equality semantics, and "last write wins" needs a defined write order
 and replacement behavior. Ask only about consequential ambiguity that remains unresolved.
+
+For a library API, write one existing call and the proposed call before choosing types or
+fields. If the caller still performs the same operation with one new setting, try the existing
+configuration mechanism first. Introduce a constructor or interface only if you can show a
+call that needs it. Check existing consumers, including generated callers, before changing
+a signature or moving where errors surface.
+
+For options that compose, trace a call with a caller-supplied dependency. A routing option,
+for example, should reuse the supplied client and preserve its transport settings in either
+option order. When an option replaces a value, decide whether the previous value remains a
+valid fallback if resolution fails. If no destination is valid, use the existing error path
+before sending a request.
 
 Then answer these for yourself:
 
@@ -281,6 +297,9 @@ Read every diff hunk with one question: *who calls this?* Apply
   glossary already has. A function whose body is a single call to another function is a smell.
 - Every new parameter, option, flag, and field has a caller that passes a non-default value in
   this change. Otherwise remove it.
+- Before storing a flag or a separate error, name two cases the existing value cannot distinguish
+  that require different behavior. If there are none, use the value itself. Keep settings used
+  only during construction off the runtime object.
 - Read new or changed names at their call sites, including private helpers and wrapper structs.
   Can a reader infer the value's role and the function's action without opening its implementation?
   If not, revise the related names together before shipping; keep unrelated names out of scope.
@@ -297,6 +316,9 @@ feature, including new rows in existing test tables. Run the relevant existing t
 the feature through its real entry point. For bug fixes, follow the regression-test guidance in
 [`references/issue-fixes.md`](references/issue-fixes.md): protect the smallest observable behavior
 or public contract that reproduces the bug, without testing each line or private helper.
+
+Verify composed options through effects a caller can observe. For example, record which
+transport receives the request and whether invalid routing sends a request at all.
 
 ### 8. Verify and summarize
 
