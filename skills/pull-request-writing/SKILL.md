@@ -127,6 +127,20 @@ arose is not established, say so rather than inventing an explanation or introdu
 Include issue references or other reviewer context only when material and supported by evidence;
 omit the optional paragraph otherwise.
 
+## Screenshots for web UI changes
+
+When the change modifies a web UI and the user has authorized PR publication or updates:
+
+- Capture a before screenshot on the base branch and an after screenshot on the change branch,
+  showing the same page, state, and viewport so the visual difference is attributable to the
+  change alone.
+- Upload both images in a single GitHub comment on the pull request, labeled **Before** and
+  **After**, once the PR exists. A two-column table keeps the pair comparable at a glance.
+- Keep the screenshots in the comment, not in the shared body, so the commit message and PR
+  summary remain identical.
+- When no before state exists, such as a newly added page, post the after screenshot alone and
+  say the UI is new.
+
 ## Commit message
 
 Use this format unless the repository has stricter requirements:
